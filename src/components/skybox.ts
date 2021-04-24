@@ -1,5 +1,5 @@
 import Core from '../core'
-import Level from '../level'
+import Level from '../level/level'
 import { Mesh, StandardMaterial, Color3, CubeTexture, MeshBuilder, Texture } from 'babylonjs';
 
 export default class Skybox {

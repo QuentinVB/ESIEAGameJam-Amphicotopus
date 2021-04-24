@@ -1,5 +1,5 @@
 import { Engine, Scene } from 'babylonjs';
-import Level from './level';
+import { Level, DefaultLevel, CreateLevelClass } from './level/index';
 
 /**
  * The main game container, it will handle high level logic and rendering of the game
@@ -11,6 +11,7 @@ export default class Core {
    * The actual level loaded in the Core
    */
   public level: Level;
+  public levelName: string;
   public canvas: HTMLCanvasElement;
   public get scene(): Scene {
     return this.level.scene;
@@ -32,34 +33,63 @@ export default class Core {
   }
 
   // Constructor
-  constructor() {
-    //Engine.isSupported()
-    this.canvas = <HTMLCanvasElement>document.getElementById('renderCanvas');
-    this.engine = new Engine(this.canvas);
-    //asset manager : https://doc.babylonjs.com/divingDeeper/importers/assetManager
-    this.loadLevel();//"level0"
+  constructor(startlevelName?: string) {
+    this.levelName = startlevelName;
   }
   /**
    * Runs the engine to render the level into the canvas
    */
   public run(): void {
+    this.Init().then(() => {
+      // scene started rendering, everything is initialized
+    });
+  }
 
-    /*  var options = new BABYLON.SceneOptimizerOptions();
-        options.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+  public async Init(): Promise<void> {
 
-        // Optimizer
-        var optimizer = new BABYLON.SceneOptimizer(this.scene, options);
-        optimizer.start();*/
+
+
+    //TODO run only if level is ready (callback ?)
+    //https://github.com/RaananW/babylonjs-webpack-es6/blob/master/src/index.ts
+    //TODO : study to make it async
+
+    //switch here (basic level)
+    const createLevelModule = this.loadLevel();//"level0"
+
+    //load pre task in the module
+    await Promise.all(createLevelModule.preTasks || []);
+
+    this.canvas = <HTMLCanvasElement>document.getElementById('renderCanvas');
+
+    this.engine = new Engine(this.canvas);
+    //engine options here !
+
+    createLevelModule.createLevel().then(() => {
+      this.level.InitLevel();
+      /*  
+var options = new BABYLON.SceneOptimizerOptions();
+   options.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
+
+   // Optimizer
+   var optimizer = new BABYLON.SceneOptimizer(this.scene, options);
+   optimizer.start();*/
+    });
+
+
     this.engine.runRenderLoop(() => {
-      if (this.level != undefined && this.level.scene != undefined) this.scene.render();
+      this.scene.render();
     });
     window.addEventListener("resize", () => {
       this.engine.resize();
     });
   }
-  public loadLevel(levelname?: string): void {
-    if (this.level) this.level.scene.dispose();
-    this.level = new Level(this, levelname);
-    this.level.InitLevel();
+
+  public loadLevel(levelname?: string): CreateLevelClass {
+
+    //if (this.level) this.level.scene.dispose();
+    //if (!levelname)
+
+    this.level = new DefaultLevel(this);
+    return this.level;
   }
 }

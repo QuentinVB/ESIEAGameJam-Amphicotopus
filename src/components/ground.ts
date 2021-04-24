@@ -1,4 +1,4 @@
-import Level from '../level'
+import Level from '../level/level'
 import { PhysicsImpostor, MeshBuilder, } from 'babylonjs';
 import GameObject from './gameobject';
 

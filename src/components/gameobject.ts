@@ -1,6 +1,6 @@
 import { Mesh, Scene } from 'babylonjs';
 import Core from '../core'
-import Level from '../level'
+import Level from '../level/level'
 
 /**
  * base Abstract class for all game objects within the game, it binds the main mesh, the core, the current level and the data model.

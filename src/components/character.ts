@@ -1,5 +1,5 @@
 import Core from '../core'
-import Level from '../level'
+import Level from '../level/level'
 import { StandardMaterial, Vector3, Color3, PhysicsImpostor, MeshBuilder } from 'babylonjs';
 import GameObject from './gameobject';
 
