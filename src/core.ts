@@ -1,6 +1,6 @@
 import { Engine, Scene } from 'babylonjs';
-import { Level, DefaultLevel, CreateLevelClass } from './level/index';
-
+import { Level, DefaultLevel, FromFileLevel } from './level/index';
+import ICreateLevelClass from './level/ICreateLevelClass'
 /**
  * The main game container, it will handle high level logic and rendering of the game
  */
@@ -46,13 +46,6 @@ export default class Core {
   }
 
   public async Init(): Promise<void> {
-
-
-
-    //TODO run only if level is ready (callback ?)
-    //https://github.com/RaananW/babylonjs-webpack-es6/blob/master/src/index.ts
-    //TODO : study to make it async
-
     //switch here (basic level)
     const createLevelModule = this.loadLevel();//"level0"
 
@@ -64,7 +57,7 @@ export default class Core {
     this.engine = new Engine(this.canvas);
     //engine options here !
 
-    createLevelModule.createLevel().then(() => {
+    await createLevelModule.createLevel().then(() => {
       this.level.InitLevel();
       /*  
 var options = new BABYLON.SceneOptimizerOptions();
@@ -79,17 +72,24 @@ var options = new BABYLON.SceneOptimizerOptions();
     this.engine.runRenderLoop(() => {
       this.scene.render();
     });
+
     window.addEventListener("resize", () => {
       this.engine.resize();
     });
   }
 
-  public loadLevel(levelname?: string): CreateLevelClass {
+  public loadLevel(): ICreateLevelClass {
 
     //if (this.level) this.level.scene.dispose();
-    //if (!levelname)
+    if (this.levelName) {
+      this.level = new FromFileLevel(this);
+    }
+    else {
+      this.level = new DefaultLevel(this);
+    }
 
-    this.level = new DefaultLevel(this);
+
+
     return this.level;
   }
 }

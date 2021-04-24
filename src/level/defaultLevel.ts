@@ -8,7 +8,7 @@ export default class DefaultLevel extends Level {
     this.scene = scene;
 
     //setup a rotating camera around the center of the scene
-    const camera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
+    const camera = new ArcRotateCamera("DebugCamera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
     camera.setTarget(Vector3.Zero());
     camera.attachControl(this.env.canvas, true);
     camera.useFramingBehavior = true;

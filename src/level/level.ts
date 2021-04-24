@@ -1,23 +1,14 @@
 import { Scene, Camera, ArcFollowCamera, UniversalCamera, Mesh, Vector3, KeyboardEventTypes, CannonJSPlugin, Engine, SceneLoader, Color4 } from 'babylonjs';
 import Helpers from '../helpers/helpers'
 import Core from '../core'
-import { Character, Ground, Skybox } from '../components/index';
-
+import { Character } from '../components/index';
 import * as States from '../states/index';
 import { Light } from 'babylonjs/Lights/light';
-
-//TODO : Should be in a different file
-export interface CreateLevelClass {
-  createLevel: () => Promise<Scene>;
-  preTasks?: Promise<unknown>[];
-}
-
-export interface CreateLevelModule {
-  default: CreateLevelClass;
-}
+import ICreateLevelClass from './ICreateLevelClass';
 
 
-export default abstract class Level implements CreateLevelClass {
+
+export default abstract class Level implements ICreateLevelClass {
   //public
   public scene: Scene;
   public _camera: Camera = null;
@@ -29,39 +20,17 @@ export default abstract class Level implements CreateLevelClass {
   protected readonly env: Core;
 
   //engine: Engine, canvas: HTMLCanvasElement
-  constructor(env: Core, levelname?: string) {
-
+  constructor(env: Core) {
     this.env = env;
-    /*
-        BABYLON.SceneLoader.LoadAssetContainer("assets/mesh/", "house.babylon", scene, function (container) {
-            defaultHouse= container.meshes[0];     
-        });
-    */
-    /*
-     if (levelname) {
-       SceneLoader.LoadAsync(env.CONFIG.meshUrl, levelname + ".babylon", this.env.engine)
-         .then((scene) => {
-           this.scene = scene;
-           console.log(scene);
-           this.loadMeshes();
-           //this.InitLevel();
-         });
-     }
-     else {
-       this.scene = new Scene(this.env.engine);
- 
-       //this.InitLevel();
-     }
- */
-    this.gameState = new States.Default(this.env);
 
+    this.gameState = new States.Default(this.env);
   }
   public abstract createLevel: () => Promise<Scene>;
   //public abstract preTasks?: Promise<unknown>[];
 
   public InitLevel(): void {
     //activate physic
-    //this.scene.enablePhysics(new Vector3(0, this.env.CONFIG.GRAVITY, 0), new CannonJSPlugin());
+    this.scene.enablePhysics(new Vector3(0, this.env.CONFIG.GRAVITY, 0), new CannonJSPlugin());
     //background 
     //TODO : where do I put this ?
     //this.scene.clearColor = new Color4(0.0, 0.0, 0.0, 1);

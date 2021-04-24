@@ -11,3 +11,5 @@ The npm has 4 entry point (executable via `npm run commandName` )
     //Engine.isSupported()
 
     //asset manager : https://doc.babylonjs.com/divingDeeper/importers/assetManager
+
+    //https://github.com/RaananW/babylonjs-webpack-es6/blob/master/src/index.ts
