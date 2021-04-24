@@ -1,4 +1,4 @@
-import { Engine, Scene } from 'babylonjs';
+import { Engine, Scene, Vector3, Color4, Color3 } from 'babylonjs';
 import { Level, DefaultLevel, FromFileLevel } from './level/index';
 import ICreateLevelClass from './level/ICreateLevelClass'
 /**
@@ -17,24 +17,33 @@ export default class Core {
     return this.level.scene;
   }
 
+  private registredFunction = [];
+
+  private readonly MAX_VELOCITY = 1.5;
   /**
    * game and physic constants
    */
   public readonly CONFIG = {
     camera: [3 * Math.PI / 2, 0, 10],
     player: [1.3, 2, -1.6],
-    MAX_VELOCITY: 1.5,
+    MAX_VELOCITY_VECTOR: new Vector3(this.MAX_VELOCITY, this.MAX_VELOCITY, this.MAX_VELOCITY),
     TERMINAL_VELOCITY: 20,
     JUMP_FORCE: 4,
     SPEED: 3,
-    GRAVITY: -9.81,
+    GRAVITY: 0,//-9.81
+    BG_COLOR: new Color4(52 / 255, 99 / 255, 185 / 255, 1),
+    FOG_COLOR: new Color3(65 / 255, 188 / 255, 238 / 255),
+    FOG_START: 5,
+    FOG_END: 30,
     meshUrl: "./public/mesh/",
+    //add other ?
     DEBUG: true
   }
 
   // Constructor
   constructor(startlevelName?: string) {
     this.levelName = startlevelName;
+    this.registredFunction = [];
   }
   /**
    * Runs the engine to render the level into the canvas
@@ -66,9 +75,14 @@ var options = new BABYLON.SceneOptimizerOptions();
    // Optimizer
    var optimizer = new BABYLON.SceneOptimizer(this.scene, options);
    optimizer.start();*/
+
     });
-
-
+    const registred = this.registredFunction;
+    this.scene.registerBeforeRender(() => {
+      for (const callback of registred) {
+        callback();
+      }
+    });
     this.engine.runRenderLoop(() => {
       this.scene.render();
     });
@@ -79,7 +93,6 @@ var options = new BABYLON.SceneOptimizerOptions();
   }
 
   public loadLevel(): ICreateLevelClass {
-
     //if (this.level) this.level.scene.dispose();
     if (this.levelName) {
       this.level = new FromFileLevel(this);
@@ -87,9 +100,10 @@ var options = new BABYLON.SceneOptimizerOptions();
     else {
       this.level = new DefaultLevel(this);
     }
-
-
-
     return this.level;
+  }
+  //TODO callback could request time ?
+  public registerFunctionBeforeUpdate(callback: () => void): void {
+    this.registredFunction.push(callback);
   }
 }

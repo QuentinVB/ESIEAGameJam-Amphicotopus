@@ -1,4 +1,4 @@
-import { Scene, Camera, ArcFollowCamera, UniversalCamera, Mesh, Vector3, KeyboardEventTypes, CannonJSPlugin, Engine, SceneLoader, Color4 } from 'babylonjs';
+import { Scene, Camera, Vector3, KeyboardEventTypes } from 'babylonjs';
 import Helpers from '../helpers/helpers'
 import Core from '../core'
 import { Character } from '../components/index';
@@ -15,28 +15,21 @@ export default abstract class Level implements ICreateLevelClass {
   public _character: Character = null;
   public _lights: Light[] = [];
   public gameState: States.AbstractState;
-
   //protected
-  protected readonly env: Core;
+  public readonly env: Core;
 
-  //engine: Engine, canvas: HTMLCanvasElement
   constructor(env: Core) {
     this.env = env;
 
     this.gameState = new States.Default(this.env);
   }
   public abstract createLevel: () => Promise<Scene>;
-  //public abstract preTasks?: Promise<unknown>[];
 
   public InitLevel(): void {
-    //activate physic
-    this.scene.enablePhysics(new Vector3(0, this.env.CONFIG.GRAVITY, 0), new CannonJSPlugin());
     //background 
     //TODO : where do I put this ?
-    //this.scene.clearColor = new Color4(0.0, 0.0, 0.0, 1);
 
-    //meshes
-    //this.loadMeshes();//TODO and bind them
+
     //actions
     //this.bindActions();
 
@@ -45,51 +38,13 @@ export default abstract class Level implements ICreateLevelClass {
       this.scene.debugLayer.show();
       Helpers.showAxis(7, this.scene);
     }
-    this.scene.registerBeforeRender(() => { this.gameState.Update() });
+    this.env.registerFunctionBeforeUpdate(this.gameState.Update);
+
   }
   /*
    * load the meshes from the file and assign the rôles
    */
-  private loadMeshes() {
-    //setup a character
-    //this._character = new Character(this);
 
-    //setup a rotating camera around the center of the scene
-    //this._camera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
-
-    //use this to setup a camera ready to follow the character
-    /*
-        this._camera = new ArcFollowCamera("ArcCamera", this.env.CONFIG.camera[0], this.env.CONFIG.camera[1], this.env.CONFIG.camera[2], this._character.MainMesh, this.scene);
-        //this.scene.getMeshByName("collide"),
-        this._camera.attachControl(this.env.canvas, true);
-        this.scene.activeCamera = this._camera;
-    */
-    //TODO : TEMP CAMERA, SHOULD BIND IT FROM THE SCENE FILE
-    // Parameters : name, position, scene
-    const camera = new UniversalCamera("UniversalCamera", new Vector3(0, 0, -10), this.scene);
-    // Targets the camera to a particular position. In this case the scene origin
-    camera.setTarget(Vector3.Zero());
-    this._camera = camera;
-    // Attach the camera to the canvas
-    this._camera.attachControl(this.env.canvas, true);
-
-
-    //link character and camera if follow camera
-    //this._camera.target = this._character;
-
-    //setup lights
-    //this._lights.push(new PointLight("light", new Vector3(5, 5, -5), this.scene));
-
-    //setup ground
-    //this._ground = new Ground(this);
-
-    //skybox
-
-    //this._skybox = Skybox.create(this.env, this);
-
-    //const blackhole = new Blackhole(this);
-
-  }
 
   private bindActions() {
     //actions from keys
