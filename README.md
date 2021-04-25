@@ -17,3 +17,4 @@ The npm has 4 entry point (executable via `npm run commandName` )
 
     compute orientation vector according to mouse pos
     https://playground.babylonjs.com/#1MTQUO#1
+    https://www.babylonjs-playground.com/#1ZJJ54#13

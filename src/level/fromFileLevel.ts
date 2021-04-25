@@ -1,8 +1,11 @@
-import { ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, SpriteManager, Sprite, FollowCamera } from "babylonjs";
+import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, SpriteManager, Sprite, FollowCamera } from "babylonjs";
 import Character from "../components/character";
 import Level from "./level";
 
 export default class FromFileLevel extends Level {
+
+  private bagSpriteManager: SpriteManager;
+  private meduseSpriteManager: SpriteManager;
 
   public createLevel = async (): Promise<Scene> => {
     const imported = await SceneLoader.LoadAsync(this.env.CONFIG.meshUrl, this.env.levelName + ".babylon", this.env.engine)
@@ -19,88 +22,74 @@ export default class FromFileLevel extends Level {
       });
 
     //DEBUG CAMERA
-    const camera = new ArcRotateCamera("DebugCamera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
-    camera.setTarget(Vector3.Zero());
-    camera.attachControl(this.env.canvas, true);
-    camera.useFramingBehavior = true;
-    //this.scene.activeCamera = camera;
-    //this._camera = camera;
+    if (this.env.CONFIG.DEBUG) {
+      const camera = new ArcRotateCamera("DebugCamera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
+      camera.setTarget(Vector3.Zero());
+      camera.attachControl(this.env.canvas, true);
+      camera.useFramingBehavior = true;
+    }
 
     const light = new HemisphericLight("light", new Vector3(0, 1, 0), this.scene);
     light.intensity = 0.7;
 
     this.scene.enablePhysics(new Vector3(0, this.env.CONFIG.GRAVITY, 0), new CannonJSPlugin());
 
-    //bind character
-    this._character = new Character(this, this.scene.getMeshByName("Character") as Mesh)
 
     //replace camera by follow camera and copy information
-
     this._camera = this.CreateCameraFromExistingOne(this.scene.getCameraByName("Camera") as Camera, this._character)
     this.scene.activeCamera = this._camera;
 
-
-    //bind ground
-    const ground = this.scene.getMeshByName("Ground");
-    ground.physicsImpostor = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this.scene);
-
-    //TODO TIDY UP
-    //meduses
-    const meduseSacManager = new SpriteManager("meduseSacManager", "./public/img/Sprite-Sac-3x3-min.png", 1, 128, this.scene);
-    const sacSprite = new Sprite("sacSprite", meduseSacManager);
-    sacSprite.playAnimation(0, 7, true, 240);
-    sacSprite.size = 1;
-    sacSprite.position = new Vector3(4, 2, 5);
-
-    const meduseManager = new SpriteManager("meduseManager", "./public/img/Sprite-Meduse-3x3-min.png", 1, 128, this.scene);
-    const meduseSprite = new Sprite("sacSprite", meduseManager);
-    meduseSprite.playAnimation(0, 7, true, 240);
-    meduseSprite.size = 1;
-    meduseSprite.position = new Vector3(1, 4, 5);
-
-
+    this.bagSpriteManager = new SpriteManager("bagSpriteManager", "./public/img/Sprite-Sac-3x3-min.png", 1, 128, this.scene);
+    this.meduseSpriteManager = new SpriteManager("meduseSpriteManager", "./public/img/Sprite-Meduse-3x3-min.png", 1, 128, this.scene);
+    for (const mesh of this.scene.meshes) {
+      console.log(mesh.name);
+      switch (mesh.name) {
+        case "Turtle": this.ManageTurtle(mesh); break;
+        case "Ground": this.ManageGround(mesh); break;
+        case "Medusa": this.AddMedusa(mesh); break;
+        case "Bag": this.AddBag(mesh); break;
+        default:
+          break;
+      }
+    }
     return this.scene;
   };
   CreateCameraFromExistingOne(originalCamera: Camera, targetCharacter: Character): FollowCamera {
     const originalCoordinates = [];
     originalCamera.position.toArray(originalCoordinates);
-    //originalCoordinates[2] = -originalCoordinates[2];
-    console.log(originalCoordinates);
-    //Vector3.Zero()
     const camera = new FollowCamera("MainCamera", Vector3.Zero(), this.scene);
-    //const camera = new ArcFollowCamera("MainCamera", -Math.PI / 2, 0, 8, targetCharacter.MainMesh, this.scene);
     camera.fov = originalCamera.fov;
     camera.maxZ = 500;
-
-    // The goal distance of camera from target
     camera.radius = 7;
-    //camera.beta += Math.PI / 8;
-
     camera.lowerRadiusLimit = 4;
     camera.upperRadiusLimit = 8;
-    // The goal height of camera above local origin (centre) of target
-    camera.heightOffset = 2;
-
-    // The goal rotation of camera around local origin (centre) of target in x y plane
+    camera.heightOffset = 1;
     camera.rotationOffset = 180;
-
-    // Acceleration of camera in moving from current to goal position
     camera.cameraAcceleration = 0.5;
-
-    // The speed at which acceleration is halted
     camera.maxCameraSpeed = 20;
-
-    // This attaches the camera to the canvas
-    //camera.attachControl(true); 
     camera.inertia = 0.5;
-
-    //attach the target mesh
-    //camera.target = targetCharacter.MainMesh.position;
-    camera.lockedTarget = targetCharacter.MainMesh; //version 2.5 onwards
-
-
+    camera.lockedTarget = targetCharacter.turtleCameraTarget; //version 2.5 onwards
     return camera;
   }
+  ManageTurtle(mesh: AbstractMesh): void {
+    this._character = new Character(this, mesh as Mesh);
+  }
+  ManageGround(mesh: AbstractMesh): void {
+    mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this.scene);
+  }
+  AddMedusa(mesh: AbstractMesh): void {
+    const meduseSprite = new Sprite("sacSprite", this.meduseSpriteManager);
+    meduseSprite.playAnimation(0, 7, true, 240);
+    meduseSprite.size = 2;
+    meduseSprite.position = mesh.position;
+  }
+  AddBag(mesh: AbstractMesh): void {
+    const sacSprite = new Sprite("sacSprite", this.bagSpriteManager);
+    sacSprite.playAnimation(0, 7, true, 240);
+    sacSprite.size = 2;
+    sacSprite.position = mesh.position;
+  }
+
 
   /*
     public preTasks? = (): Promise<unknown>[] => {
