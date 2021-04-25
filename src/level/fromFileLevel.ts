@@ -1,4 +1,4 @@
-import { ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, Color4, FollowCamera } from "babylonjs";
+import { ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, SpriteManager, Sprite, FollowCamera } from "babylonjs";
 import Character from "../components/character";
 import Level from "./level";
 
@@ -9,10 +9,13 @@ export default class FromFileLevel extends Level {
       .then((scene) => {
         this.scene = scene;
         this.scene.clearColor = this.env.CONFIG.BG_COLOR;
-        this.scene.fogColor = this.env.CONFIG.FOG_COLOR;
-        this.scene.fogMode = Scene.FOGMODE_LINEAR;
-        this.scene.fogStart = this.env.CONFIG.FOG_START;
-        this.scene.fogEnd = this.env.CONFIG.FOG_END;
+
+        if (!this.env.CONFIG.DEBUG) {
+          this.scene.fogColor = this.env.CONFIG.FOG_COLOR;
+          this.scene.fogMode = Scene.FOGMODE_LINEAR;
+          this.scene.fogStart = this.env.CONFIG.FOG_START;
+          this.scene.fogEnd = this.env.CONFIG.FOG_END;
+        }
       });
 
     //DEBUG CAMERA
@@ -40,6 +43,20 @@ export default class FromFileLevel extends Level {
     //bind ground
     const ground = this.scene.getMeshByName("Ground");
     ground.physicsImpostor = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this.scene);
+
+    //TODO TIDY UP
+    //meduses
+    const meduseSacManager = new SpriteManager("meduseSacManager", "./public/img/Sprite-Sac-3x3-min.png", 1, 128, this.scene);
+    const sacSprite = new Sprite("sacSprite", meduseSacManager);
+    sacSprite.playAnimation(0, 7, true, 240);
+    sacSprite.size = 1;
+    sacSprite.position = new Vector3(4, 2, 5);
+
+    const meduseManager = new SpriteManager("meduseManager", "./public/img/Sprite-Meduse-3x3-min.png", 1, 128, this.scene);
+    const meduseSprite = new Sprite("sacSprite", meduseManager);
+    meduseSprite.playAnimation(0, 7, true, 240);
+    meduseSprite.size = 1;
+    meduseSprite.position = new Vector3(1, 4, 5);
 
 
     return this.scene;
@@ -80,6 +97,7 @@ export default class FromFileLevel extends Level {
     //attach the target mesh
     //camera.target = targetCharacter.MainMesh.position;
     camera.lockedTarget = targetCharacter.MainMesh; //version 2.5 onwards
+
 
     return camera;
   }

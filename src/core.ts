@@ -26,6 +26,7 @@ export default class Core {
   public readonly CONFIG = {
     camera: [3 * Math.PI / 2, 0, 10],
     player: [1.3, 2, -1.6],
+    MIN_VELOCITY_VECTOR: new Vector3(-this.MAX_VELOCITY, -this.MAX_VELOCITY, -this.MAX_VELOCITY),
     MAX_VELOCITY_VECTOR: new Vector3(this.MAX_VELOCITY, this.MAX_VELOCITY, this.MAX_VELOCITY),
     TERMINAL_VELOCITY: 20,
     JUMP_FORCE: 4,
