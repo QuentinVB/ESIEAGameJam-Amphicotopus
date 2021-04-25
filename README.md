@@ -13,3 +13,7 @@ The npm has 4 entry point (executable via `npm run commandName` )
     //asset manager : https://doc.babylonjs.com/divingDeeper/importers/assetManager
 
     //https://github.com/RaananW/babylonjs-webpack-es6/blob/master/src/index.ts
+
+
+    compute orientation vector according to mouse pos
+    https://playground.babylonjs.com/#1MTQUO#1
