@@ -1,7 +1,6 @@
 import Level from '../level/level'
-import { Vector3, PhysicsImpostor, Mesh, SpriteManager, Sprite, KeyboardEventTypes, PointerEventTypes, AbstractMesh, Angle, Color3, Vector2, Quaternion } from 'babylonjs';
+import { Vector3, PhysicsImpostor, Mesh, SpriteManager, Sprite, KeyboardEventTypes, PointerEventTypes, AbstractMesh } from 'babylonjs';
 import GameObject from './gameobject';
-import Helpers from '../helpers/helpers';
 
 interface ITurtleState {
   state: TurtleState
@@ -48,7 +47,7 @@ export default class Character extends GameObject {
 
     this.turtlePhysic = new PhysicsImpostor(this.MainMesh, PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 1, friction: 1 }, this.Scene);
     this.MainMesh.physicsImpostor = this.turtlePhysic;
-    this.turtlePhysic.registerBeforePhysicsStep((impostor) => {
+    this.turtlePhysic.registerBeforePhysicsStep(() => {
       //lock rotation
       this.turtlePhysic.setAngularVelocity(Vector3.Zero());
     });

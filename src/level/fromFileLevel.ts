@@ -1,14 +1,13 @@
 import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, SpriteManager, Sprite, FollowCamera } from "babylonjs";
 import Character from "../components/character";
+import { ISpriteInfo, SpriteLibrary } from "../components/spriteLib";
 import Level from "./level";
 
 export default class FromFileLevel extends Level {
-
-  private bagSpriteManager: SpriteManager;
-  private meduseSpriteManager: SpriteManager;
+  private spriteLibrary: SpriteLibrary;
 
   public createLevel = async (): Promise<Scene> => {
-    const imported = await SceneLoader.LoadAsync(this.env.CONFIG.meshUrl, this.env.levelName + ".babylon", this.env.engine)
+    await SceneLoader.LoadAsync(this.env.CONFIG.meshUrl, this.env.levelName + ".babylon", this.env.engine)
       .then((scene) => {
         this.scene = scene;
         this.scene.clearColor = this.env.CONFIG.BG_COLOR;
@@ -29,29 +28,34 @@ export default class FromFileLevel extends Level {
       camera.useFramingBehavior = true;
     }
 
+    //TODO : should be removed
     const light = new HemisphericLight("light", new Vector3(0, 1, 0), this.scene);
     light.intensity = 0.7;
 
     this.scene.enablePhysics(new Vector3(0, this.env.CONFIG.GRAVITY, 0), new CannonJSPlugin());
 
+    // load sprites
+    this.spriteLibrary = new SpriteLibrary(this.scene);
+
+    for (const mesh of this.scene.meshes) {
+      console.log(mesh.name);
+      //mesh.name.startsWith("Medusa")
+      switch (mesh.name) {
+        case "Turtle": this.ManageTurtle(mesh); break;
+        case "Ground": this.ManageGround(mesh); break;
+        //TODO : case rock ? (or tag collidable ?)
+        default:
+          break;
+      }
+    }
+    this.AddSpritesFromTag("Medusa");
+    this.AddSpritesFromTag("PinkCoral");
+    this.AddSpritesFromTag("Bag");
 
     //replace camera by follow camera and copy information
     this._camera = this.CreateCameraFromExistingOne(this.scene.getCameraByName("Camera") as Camera, this._character)
     this.scene.activeCamera = this._camera;
 
-    this.bagSpriteManager = new SpriteManager("bagSpriteManager", "./public/img/Sprite-Sac-3x3-min.png", 1, 128, this.scene);
-    this.meduseSpriteManager = new SpriteManager("meduseSpriteManager", "./public/img/Sprite-Meduse-3x3-min.png", 1, 128, this.scene);
-    for (const mesh of this.scene.meshes) {
-      console.log(mesh.name);
-      switch (mesh.name) {
-        case "Turtle": this.ManageTurtle(mesh); break;
-        case "Ground": this.ManageGround(mesh); break;
-        case "Medusa": this.AddMedusa(mesh); break;
-        case "Bag": this.AddBag(mesh); break;
-        default:
-          break;
-      }
-    }
     return this.scene;
   };
   CreateCameraFromExistingOne(originalCamera: Camera, targetCharacter: Character): FollowCamera {
@@ -77,18 +81,19 @@ export default class FromFileLevel extends Level {
   ManageGround(mesh: AbstractMesh): void {
     mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this.scene);
   }
-  AddMedusa(mesh: AbstractMesh): void {
-    const meduseSprite = new Sprite("sacSprite", this.meduseSpriteManager);
-    meduseSprite.playAnimation(0, 7, true, 240);
-    meduseSprite.size = 2;
-    meduseSprite.position = mesh.position;
+
+  AddSpritesFromTag(tag: string): void {
+    const meshes = this.scene.getMeshesByTags(tag);
+    const spriteInfo: ISpriteInfo = this.spriteLibrary[tag];
+    for (const mesh of meshes) {
+      const instanceOfSprite = new Sprite("sacSprite", spriteInfo.manager);
+      instanceOfSprite.playAnimation(spriteInfo.animationStart, spriteInfo.animationEnd, true, spriteInfo.animationDelay);
+      instanceOfSprite.size = spriteInfo.size;
+      instanceOfSprite.position = mesh.position;
+      mesh.dispose();
+    }
   }
-  AddBag(mesh: AbstractMesh): void {
-    const sacSprite = new Sprite("sacSprite", this.bagSpriteManager);
-    sacSprite.playAnimation(0, 7, true, 240);
-    sacSprite.size = 2;
-    sacSprite.position = mesh.position;
-  }
+  //TODO : should refactor sprite creation...
 
 
   /*
