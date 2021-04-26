@@ -5,5 +5,3 @@ export { default as Skybox } from "./skybox";
 export { default as Character } from "./character";
 export { default as Blackhole } from "./blackhole";
 
-export { SpriteLibrary as SpriteLibrary } from "./spriteLib";
-export { ISpriteInfo as ISpriteInfo } from "./spriteLib";

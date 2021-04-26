@@ -1,6 +1,7 @@
 import { Engine, Scene, Vector3, Color4, Color3 } from 'babylonjs';
 import { Level, DefaultLevel, FromFileLevel } from './level/index';
 import ICreateLevelClass from './level/ICreateLevelClass'
+import { SoundLibrary } from './services/soundLib';
 /**
  * The main game container, it will handle high level logic and rendering of the game
  */
@@ -16,6 +17,9 @@ export default class Core {
   public get scene(): Scene {
     return this.level.scene;
   }
+  public soundLibrary: SoundLibrary;
+  //score
+  public stamina: number;
 
   private registredFunction = [];
 
@@ -37,6 +41,11 @@ export default class Core {
     FOG_START: 5,
     FOG_END: 30,
     meshUrl: "./public/mesh/",
+    soundUrl: "./public/sounds/",
+    MEDUSASTAMINAVALUE: 10,
+    BAGSTAMINACOST: 10,
+    BASESTAMINA: 50,
+    MAXSTAMINA: 100,
     //add other ?
     DEBUG: true
   }
@@ -45,6 +54,8 @@ export default class Core {
   constructor(startlevelName?: string) {
     this.levelName = startlevelName;
     this.registredFunction = [];
+    this.stamina = this.CONFIG.BASESTAMINA;
+
   }
   /**
    * Runs the engine to render the level into the canvas
@@ -69,6 +80,8 @@ export default class Core {
 
     await createLevelModule.createLevel().then(() => {
       this.level.InitLevel();
+      this.soundLibrary = new SoundLibrary(this.level.scene, this.CONFIG.soundUrl);
+      this.soundLibrary.loadSounds();
       /*  
 var options = new BABYLON.SceneOptimizerOptions();
    options.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
@@ -78,6 +91,9 @@ var options = new BABYLON.SceneOptimizerOptions();
    optimizer.start();*/
 
     });
+
+
+    this.soundLibrary.underwaterAmbient.play();
     const registred = this.registredFunction;
     this.scene.registerBeforeRender(() => {
       for (const callback of registred) {

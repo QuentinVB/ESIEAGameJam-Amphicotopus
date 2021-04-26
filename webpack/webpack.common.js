@@ -32,8 +32,8 @@ module.exports = {
     ],
     externals: {
         'babylonjs': 'BABYLON',
+        'babylonjs-gui': 'BABYLON.GUI',
     },
-
     output: {
         path: path.resolve(root, 'dist'),
         filename: 'public/js/main.js',
