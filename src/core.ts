@@ -1,5 +1,5 @@
 import { Engine, Scene, Vector3, Color4, Color3 } from 'babylonjs';
-import { Level, DefaultLevel, FromFileLevel, MenuLevel } from './level/index';
+import { Level, DefaultLevel, FromFileLevel, MenuLevel, CutsceneLevel } from './level/index';
 
 import ICreateLevelClass from './level/ICreateLevelClass'
 import { SoundLibrary } from './services/soundLib';
@@ -51,9 +51,25 @@ export default class Core {
     DEBUG: true
   }
 
+  private readonly SCENARIO = [
+    "menu",
+    "opening",
+    "level0",
+    "victory"
+  ];
+  private _scenarioStep: number;
+  private _byPassScenario = false;
+  private loading: boolean;
   // Constructor
   constructor(startlevelName?: string) {
-    this.levelName = startlevelName;
+    if (startlevelName) {
+      this._byPassScenario = true;
+      this.levelName = startlevelName;
+    }
+    else {
+      this._scenarioStep = 0;
+    }
+
     this.registredFunction = [];
     this.stamina = this.CONFIG.BASESTAMINA;
 
@@ -62,26 +78,22 @@ export default class Core {
    * Runs the engine to render the level into the canvas
    */
   public run(): void {
+    this.loading = true;
     const createLevelModule = this.loadLevel();
     this.Init(createLevelModule).then(() => {
+      this.loading = false;
       // scene started rendering, everything is initialized
     });
   }
 
   public async Init(createLevelModule: ICreateLevelClass): Promise<void> {
-    //switch here (basic level)
-    //"level0"
-
     //load pre task in the module
     await Promise.all(createLevelModule.preTasks || []);
-
     this.canvas = <HTMLCanvasElement>document.getElementById('renderCanvas');
-
-    this.engine = new Engine(this.canvas);
+    this.engine = new Engine(this.canvas, true);
     //engine options here !
 
     await createLevelModule.createLevel().then(() => {
-
       //TODO :music should be loaded from another scene
       this.soundLibrary = new SoundLibrary(this.level.scene, this.CONFIG.soundUrl);
       this.soundLibrary.loadSounds();
@@ -96,11 +108,7 @@ var options = new BABYLON.SceneOptimizerOptions();
    // Optimizer
    var optimizer = new BABYLON.SceneOptimizer(this.scene, options);
    optimizer.start();*/
-
     });
-
-
-
     const registred = this.registredFunction;
     this.scene.registerBeforeRender(() => {
       for (const callback of registred) {
@@ -108,7 +116,7 @@ var options = new BABYLON.SceneOptimizerOptions();
       }
     });
     this.engine.runRenderLoop(() => {
-      this.scene.render();
+      if (!this.loading) this.scene.render();
     });
 
     window.addEventListener("resize", () => {
@@ -117,26 +125,48 @@ var options = new BABYLON.SceneOptimizerOptions();
   }
 
   public loadLevel(): ICreateLevelClass {
-    //if (this.level) this.level.scene.dispose();
-    if (this.levelName && this.levelName == "scene_start_menu") {
-      this.level = new MenuLevel(this);
-    }
-    else if (this.levelName) {
-      this.level = new FromFileLevel(this);
+    if (this.level) this.level.scene.dispose();
+
+    if (this._byPassScenario) {
+      if (this.levelName == "scene_start_menu") {
+        this.level = new MenuLevel(this);
+      }
+      else if (this.levelName) {
+        this.level = new FromFileLevel(this);
+      }
+      else {
+        this.level = new DefaultLevel(this);
+      }
     }
     else {
-      this.level = new DefaultLevel(this);
+      const scenario = this.SCENARIO[this._scenarioStep];
+      console.log(`load scenario, scene number ${this._scenarioStep} : "${scenario}"`);
+      if (scenario === "menu") this.level = new MenuLevel(this);
+      if (scenario === "opening") this.level = new CutsceneLevel(this, "opening");
+      if (scenario === "victory") this.level = new CutsceneLevel(this, "victory");
+      if (scenario.startsWith("level")) {
+        this.levelName = "scene_" + scenario;
+        this.level = new FromFileLevel(this);
+      }
     }
+
     return this.level;
   }
   public ChangeLevel(levelName?: string): void {
     this.levelName = levelName;
-    //TODO : should dispose level correctly ?
-    if (this.level) this.level.scene.dispose();
     this.run();
+  }
+  public setScenarioStep(step: number): void {
+    //TODO : add guards !
+    this._scenarioStep = step;
+    this.run();
+  }
+  public getScenarioStep(): number {
+    return this._scenarioStep;
   }
   //TODO callback could request time ?
   public registerFunctionBeforeUpdate(callback: () => void): void {
     this.registredFunction.push(callback);
   }
+  //goto()per state
 }

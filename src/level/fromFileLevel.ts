@@ -3,6 +3,7 @@ import { AdvancedDynamicTexture, Control, Rectangle } from "babylonjs-gui";
 import Character from "../components/character";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
 import Level from "./level";
+import * as States from '../states/index';
 
 export default class FromFileLevel extends Level {
 
@@ -24,35 +25,15 @@ export default class FromFileLevel extends Level {
       });
 
 
-
-    //DEBUG CAMERA
-    if (this.env.CONFIG.DEBUG) {
-      const camera = new ArcRotateCamera("DebugCamera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
-      camera.setTarget(Vector3.Zero());
-      camera.attachControl(this.env.canvas, true);
-      camera.useFramingBehavior = true;
-    }
-
-    //TODO : should be removed
-    const light = new HemisphericLight("light", new Vector3(0, 1, 0), this.scene);
-    light.intensity = 0.7;
-
-    const dirlight = new DirectionalLight("pointLight", new Vector3(0, -1, 0), this.scene);
+    //PHYSIC
     this.scene.enablePhysics(new Vector3(0, this.env.CONFIG.GRAVITY, 0), new CannonJSPlugin());
 
-    // load sprites
+    //SPRITE
     this.spriteLibrary = new SpriteLibrary(this.scene);
-    /*
-        for (const mesh of this.scene.meshes) {
-          //console.log(mesh.name);
-          switch (mesh.name) {
-            case "Turtle": this.ManageTurtle(mesh); break;
-            case "": break;
-            default:
-              break;
-          }
-        }*/
+
+    //LOAD OBJECTS
     this.ManageTurtle(this.scene.getMeshByName("Turtle"));
+
     this.AddSpritesFromTag("Medusa");
     this.AddSpritesFromTag("PinkCoral");
     this.AddSpritesFromTag("Bag");
@@ -61,20 +42,64 @@ export default class FromFileLevel extends Level {
 
     this.ManageGoodItems("Medusa");
     this.ManageBadItems("Bag");
-    this.ManageTrigger(this.scene.getMeshByName("Trigger"));
 
     this.ManageObstacles("Obstacle");
     this.ManageGrounds("Ground");
+
+    //LIGHTS
+    //TODO : should be removed
+    const light = new HemisphericLight("light", new Vector3(0, 1, 0), this.scene);
+    light.intensity = 0.7;
+    const dirlight = new DirectionalLight("pointLight", new Vector3(0, -1, 0), this.scene);
 
     const shadowGenerator = new ShadowGenerator(1024, dirlight);
     shadowGenerator.addShadowCaster(this._character.MainMesh)
     //shadowGenerator.getShadowMap().renderList.push();
 
-    //replace camera by follow camera and copy information
+    //CAMERA
     this._camera = this.CreateCameraFromExistingOne(this.scene.getCameraByName("Camera") as Camera, this._character)
     this.scene.activeCamera = this._camera;
+    //DEBUG CAMERA
+    if (this.env.CONFIG.DEBUG) {
+      const camera = new ArcRotateCamera("DebugCamera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this.scene);
+      camera.setTarget(Vector3.Zero());
+      camera.attachControl(this.env.canvas, true);
+      camera.useFramingBehavior = true;
+    }
 
-    //TODO : Move UI
+    //GUI
+    this.CreateUI();
+
+    //STATE
+    const trigger = this.scene.getMeshByName("Trigger");
+    this.gameState = new States.Game(this.env, trigger as Mesh);
+
+    return this.scene;
+  };
+  /**
+   * replace camera by follow camera and copy information
+   * @param originalCamera 
+   * @param targetCharacter 
+   * @returns 
+   */
+  CreateCameraFromExistingOne(originalCamera: Camera, targetCharacter: Character): FollowCamera {
+    const originalCoordinates = [];
+    originalCamera.position.toArray(originalCoordinates);
+    const camera = new FollowCamera("MainCamera", Vector3.Zero(), this.scene);
+    camera.fov = originalCamera.fov;
+    camera.maxZ = 500;
+    camera.radius = 7;
+    camera.lowerRadiusLimit = 4;
+    camera.upperRadiusLimit = 8;
+    camera.heightOffset = 1;
+    camera.rotationOffset = 180;
+    camera.cameraAcceleration = 0.5;
+    camera.maxCameraSpeed = 20;
+    camera.inertia = 0.5;
+    camera.lockedTarget = targetCharacter.turtleCameraTarget; //version 2.5 onwards
+    return camera;
+  }
+  CreateUI(): void {
     const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     const mainContainer = new Rectangle();
     mainContainer.height = "20px";
@@ -95,26 +120,8 @@ export default class FromFileLevel extends Level {
     this.scene.onBeforeRenderObservable.add(() => {
       containerbg.width = this.env.stamina / this.env.CONFIG.MAXSTAMINA;
     });
-
-    return this.scene;
-  };
-  CreateCameraFromExistingOne(originalCamera: Camera, targetCharacter: Character): FollowCamera {
-    const originalCoordinates = [];
-    originalCamera.position.toArray(originalCoordinates);
-    const camera = new FollowCamera("MainCamera", Vector3.Zero(), this.scene);
-    camera.fov = originalCamera.fov;
-    camera.maxZ = 500;
-    camera.radius = 7;
-    camera.lowerRadiusLimit = 4;
-    camera.upperRadiusLimit = 8;
-    camera.heightOffset = 1;
-    camera.rotationOffset = 180;
-    camera.cameraAcceleration = 0.5;
-    camera.maxCameraSpeed = 20;
-    camera.inertia = 0.5;
-    camera.lockedTarget = targetCharacter.turtleCameraTarget; //version 2.5 onwards
-    return camera;
   }
+
   ManageTurtle(mesh: AbstractMesh): void {
     this._character = new Character(this, mesh as Mesh);
   }
@@ -174,20 +181,7 @@ export default class FromFileLevel extends Level {
       );
     });
   }
-  ManageTrigger(mesh: AbstractMesh): void {
-    mesh.checkCollisions = true;
-    this._character.MainMesh.actionManager.registerAction(
-      new ExecuteCodeAction(
-        {
-          trigger: ActionManager.OnIntersectionEnterTrigger,
-          parameter: mesh
-        },
-        () => {
-          console.info("collided with victory !");
-        }
-      )
-    );
-  }
+
 
   ManageObstacles(tagQuery: string): void {
     const obstacle = this.scene.getMeshesByTags(tagQuery);
@@ -237,3 +231,13 @@ export default class FromFileLevel extends Level {
    }
 */
 }
+    /*
+for (const mesh of this.scene.meshes) {
+//console.log(mesh.name);
+switch (mesh.name) {
+case "Turtle": this.ManageTurtle(mesh); break;
+case "": break;
+default:
+break;
+}
+}*/

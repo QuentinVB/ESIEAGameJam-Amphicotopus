@@ -5,8 +5,10 @@ import Core from "../core";
  */
 export default abstract class AbstractState {
   protected context: Core;
+  protected active: boolean;
   constructor(context: Core) {
     this.context = context;
+    this.active = true;
   }
   /**
    * Update the state, may replace the current state by another state using Next. 

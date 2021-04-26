@@ -66,12 +66,12 @@ export default class MenuLevel extends Level {
 
       //scene.detachControl(); //observables disabled
 
-      console.log("launch the game !")
+      console.log("launch the cutscene !");
     });
     this.registredTransiton = () => {
 
       console.log("fade done");
-      this.env.ChangeLevel("scene_level1");
+      this.env.setScenarioStep(1);
     }
 
     //--SCENE FINISHED LOADING--

@@ -2,10 +2,9 @@ import { Scene, Camera, Vector3, KeyboardEventTypes, Mesh, Sprite, Effect } from
 import Helpers from '../helpers/helpers'
 import Core from '../core'
 import { ISpriteInfo, SpriteLibrary } from '../services/index';
-import * as States from '../states/index';
+import { AbstractState, Default } from '../states/index';
 import { Light } from 'babylonjs/Lights/light';
 import ICreateLevelClass from './ICreateLevelClass';
-import { AdvancedDynamicTexture, Button, Control, Rectangle } from 'babylonjs-gui';
 import Character from '../components/character';
 
 
@@ -16,18 +15,20 @@ export default abstract class Level implements ICreateLevelClass {
   public _camera: Camera = null;
   public _character: Character = null;
   public _lights: Light[] = [];
-  public gameState: States.AbstractState;
+  public gameState: AbstractState;
   public _transition = false;
   public registredTransiton: () => void;
   public fadeLevel = 0;
-  //protected
   public readonly env: Core;
+
+  //protected
   protected spriteLibrary: SpriteLibrary;
   protected spriteRefs: Sprite[] = [];
+
   constructor(env: Core) {
     this.env = env;
 
-    this.gameState = new States.Default(this.env);
+    this.gameState = new Default(this.env);
     Effect.RegisterShader("fade",
       "precision highp float;" +
       "varying vec2 vUV;" +
@@ -47,7 +48,7 @@ export default abstract class Level implements ICreateLevelClass {
       this.scene.debugLayer.show();
       Helpers.showAxis(7, this.scene);
     }
-    this.env.registerFunctionBeforeUpdate(this.gameState.Update);
+    this.env.registerFunctionBeforeUpdate(() => { this.gameState.Update() });
 
     this.fadeLevel = 1.0;
     this._transition = false;
@@ -60,27 +61,6 @@ export default abstract class Level implements ICreateLevelClass {
         }
       }
     });
-    console.log("ready to play")
-
-
-    // GUI
-
-    //TODO PUT UI in a separated space
-    /*
-    const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-    const button1 = Button.CreateSimpleButton("but1", "Click Me");
-    button1.width = "150px"
-    button1.height = "40px";
-    button1.color = "white";
-    button1.cornerRadius = 20;
-    button1.background = "green";
-    button1.onPointerUpObservable.add(function () {
-      alert("you did it!");
-    });
-    advancedTexture.addControl(button1);
-*/
-
-
   }
   AddSpritesFromTag(tag: string): Mesh[] {
     const meshes = this.scene.getMeshesByTags(tag);
@@ -104,18 +84,6 @@ export default abstract class Level implements ICreateLevelClass {
 
 
   private bindActions() {
-    //actions from keys
-    this.scene.onKeyboardObservable.add((kbInfo) => {
-      if (kbInfo.type == KeyboardEventTypes.KEYDOWN) {
-        switch (kbInfo.event.keyCode) {
-          //spaceBar
-          case 32:
-            this._character.MainMesh.translate(new Vector3(1, 0, 0), 3);
-            break;
-        }
-      }
-    });
-
     //actions from mouse
     this.scene.onPointerDown = (evt, pickResult) => {
       // if the click hits the ground object, we change the impact position

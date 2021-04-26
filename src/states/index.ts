@@ -2,7 +2,6 @@
 
 export { default as AbstractState } from "./state";
 export { default as Default } from "./default";
-/*
+export { default as Game } from "./game";
 export { default as Win } from "./win";
 export { default as Lose } from "./lose";
-*/
