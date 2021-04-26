@@ -48,14 +48,15 @@ export default class Core {
     BASESTAMINA: 50,
     MAXSTAMINA: 100,
     //add other ?
-    DEBUG: true
+    DEBUG: false
   }
 
   private readonly SCENARIO = [
     "menu",
     "opening",
-    "level0",
-    "victory"
+    "level1",
+    "victory",
+    "death"
   ];
   private _scenarioStep: number;
   private _byPassScenario = false;
@@ -144,6 +145,7 @@ var options = new BABYLON.SceneOptimizerOptions();
       if (scenario === "menu") this.level = new MenuLevel(this);
       if (scenario === "opening") this.level = new CutsceneLevel(this, "opening");
       if (scenario === "victory") this.level = new CutsceneLevel(this, "victory");
+      if (scenario === "death") this.level = new CutsceneLevel(this, "death");
       if (scenario.startsWith("level")) {
         this.levelName = "scene_" + scenario;
         this.level = new FromFileLevel(this);

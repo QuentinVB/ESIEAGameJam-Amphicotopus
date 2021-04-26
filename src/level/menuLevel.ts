@@ -21,37 +21,66 @@ export default class MenuLevel extends Level {
     const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     guiMenu.idealHeight = 720;
 
-    //background image
+    //background
+    const bgContainer = new Rectangle("bgContainer");
+    bgContainer.width = 1;
+    bgContainer.height = 1;
+    bgContainer.thickness = 1;
+    bgContainer.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_CENTER;
+    bgContainer.horizontalAlignment = Rectangle.HORIZONTAL_ALIGNMENT_CENTER;
+    guiMenu.addControl(bgContainer);
+
+    const imageBg = new Image("startbg", "./public/img/Titre-bg.jpg");
+    imageBg.stretch = Image.STRETCH_EXTEND;
+    bgContainer.addControl(imageBg);
+
+    //title image
     const imageRect = new Rectangle("titleContainer");
     imageRect.width = 0.8;
+    imageRect.height = 0.5;
     imageRect.thickness = 0;
+    imageRect.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_TOP;
     guiMenu.addControl(imageRect);
 
-    const startbg = new Image("startbg", "./public/img/start.jpeg");
+    const startbg = new Image("startbg", "./public/img/Titre.png");
     startbg.stretch = Image.STRETCH_UNIFORM;
-    startbg.sourceTop =
-      startbg.verticalAlignment = Image.VERTICAL_ALIGNMENT_BOTTOM;
     imageRect.addControl(startbg);
 
-    const title = new TextBlock("title", "UN TITRE");
+    const visuelContainer = new Rectangle("visuelContainer");
+    visuelContainer.width = 0.8;
+    visuelContainer.height = 0.5;
+    visuelContainer.thickness = 0;
+    visuelContainer.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_CENTER;
+    guiMenu.addControl(visuelContainer);
+
+    const visuel = new Image("startbg", "./public/img/Visuel-Accueil.png");
+    visuel.stretch = Image.STRETCH_UNIFORM;
+    visuelContainer.addControl(visuel);
+
+    const title = new TextBlock("info", "truc");
     title.resizeToFit = true;
     title.fontFamily = "Arial";
-    title.fontSize = "32px";
+    title.fontSize = "10px";
     title.color = "white";
     title.resizeToFit = true;
     title.top = "54px";
     title.width = 0.8;
-    title.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+    title.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     imageRect.addControl(title);
 
+
+
+    //button
     const startBtn = Button.CreateSimpleButton("start", "PLAY");
-    startBtn.fontFamily = "Viga";
+    startBtn.fontFamily = "Arial";
     startBtn.width = 0.2
     startBtn.height = "40px";
     startBtn.color = "white";
     startBtn.thickness = 0;
+    startBtn.top = "15px";
     startBtn.verticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
-    imageRect.addControl(startBtn);
+    startBtn.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+    visuelContainer.addControl(startBtn);
 
     startBtn.onPointerDownObservable.add(() => {
       //fade screen

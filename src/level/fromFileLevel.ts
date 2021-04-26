@@ -1,5 +1,5 @@
 import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager } from "babylonjs";
-import { AdvancedDynamicTexture, Control, Rectangle } from "babylonjs-gui";
+import { AdvancedDynamicTexture, Control, Rectangle, Image } from "babylonjs-gui";
 import Character from "../components/character";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
 import Level from "./level";
@@ -101,12 +101,19 @@ export default class FromFileLevel extends Level {
   }
   CreateUI(): void {
     const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    const size = 0.5;
+
+
+    const hp = 771 * size;
+    const x = 60 * size;
+    const y = 155 * size;
     const mainContainer = new Rectangle();
     mainContainer.height = "20px";
-    mainContainer.width = 0.6;
+    mainContainer.width = hp + "px";
     mainContainer.thickness = 0;
     mainContainer.background = "";
-    mainContainer.top = "0px";
+    mainContainer.top = x + "px";
+    //mainContainer.left = y + "px";
     mainContainer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
     mainContainer.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
     advancedTexture.addControl(mainContainer);
@@ -116,6 +123,18 @@ export default class FromFileLevel extends Level {
     containerbg.background = "lime";
     containerbg.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     mainContainer.addControl(containerbg);
+
+
+    const bgContainer = new Rectangle("bgContainer");
+    bgContainer.width = size * 996 + "px";
+    bgContainer.height = size * 145 + "px";
+    bgContainer.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_TOP;
+    bgContainer.horizontalAlignment = Rectangle.HORIZONTAL_ALIGNMENT_CENTER;
+    advancedTexture.addControl(bgContainer);
+
+    const imageBg = new Image("startbg", "./public/img/Stamina-bar.png");
+    imageBg.stretch = Image.STRETCH_EXTEND;
+    bgContainer.addControl(imageBg);
 
     this.scene.onBeforeRenderObservable.add(() => {
       containerbg.width = this.env.stamina / this.env.CONFIG.MAXSTAMINA;
@@ -176,6 +195,7 @@ export default class FromFileLevel extends Level {
             this.env.stamina -= this.env.CONFIG.BAGSTAMINACOST;
             console.info("collided with bag !");
             this.removeItemAndSprite(item.name);
+
           }
         )
       );

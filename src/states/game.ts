@@ -31,6 +31,10 @@ export default class StateGame extends AbstractState {
     switch (this._behavior) {
       case Behavior.Alive:
         console.log("game is running");
+        if (this.context.stamina <= 0) {
+          //ur dead
+          this._behavior = Behavior.ToLose;
+        }
         break;
       case Behavior.ToLose:
         this.Next(new Lose(this.context));

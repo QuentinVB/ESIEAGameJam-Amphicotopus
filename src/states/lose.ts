@@ -11,8 +11,9 @@ export default class StateLose extends AbstractState {
 
   public Update(): void {
     if (this.active) {
+      //display turtle death
       this.active = false;
-      this.context.setScenarioStep(this.context.getScenarioStep());
+      this.context.setScenarioStep(4);
       this.Next(new Default(this.context));
     }
   }
