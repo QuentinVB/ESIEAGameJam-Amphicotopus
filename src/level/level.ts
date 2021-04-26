@@ -1,4 +1,4 @@
-import { Scene, Camera, Vector3, KeyboardEventTypes, Mesh, Sprite } from 'babylonjs';
+import { Scene, Camera, Vector3, KeyboardEventTypes, Mesh, Sprite, Effect } from 'babylonjs';
 import Helpers from '../helpers/helpers'
 import Core from '../core'
 import { ISpriteInfo, SpriteLibrary } from '../services/index';
@@ -17,6 +17,9 @@ export default abstract class Level implements ICreateLevelClass {
   public _character: Character = null;
   public _lights: Light[] = [];
   public gameState: States.AbstractState;
+  public _transition = false;
+  public registredTransiton: () => void;
+  public fadeLevel = 0;
   //protected
   public readonly env: Core;
   protected spriteLibrary: SpriteLibrary;
@@ -25,6 +28,16 @@ export default abstract class Level implements ICreateLevelClass {
     this.env = env;
 
     this.gameState = new States.Default(this.env);
+    Effect.RegisterShader("fade",
+      "precision highp float;" +
+      "varying vec2 vUV;" +
+      "uniform sampler2D textureSampler; " +
+      "uniform float fadeLevel; " +
+      "void main(void){" +
+      "vec4 baseColor = texture2D(textureSampler, vUV) * fadeLevel;" +
+      "baseColor.a = 1.0;" +
+      "gl_FragColor = baseColor;" +
+      "}");
   }
   public abstract createLevel: () => Promise<Scene>;
 
@@ -35,6 +48,21 @@ export default abstract class Level implements ICreateLevelClass {
       Helpers.showAxis(7, this.scene);
     }
     this.env.registerFunctionBeforeUpdate(this.gameState.Update);
+
+    this.fadeLevel = 1.0;
+    this._transition = false;
+    this.env.registerFunctionBeforeUpdate(() => {
+      if (this._transition && this.registredTransiton != undefined) {
+        this.fadeLevel -= .05;
+        if (this.fadeLevel <= 0) {
+          this.registredTransiton();
+          this._transition = false;
+        }
+      }
+    });
+    console.log("ready to play")
+
+
     // GUI
 
     //TODO PUT UI in a separated space
@@ -52,42 +80,7 @@ export default abstract class Level implements ICreateLevelClass {
     advancedTexture.addControl(button1);
 */
 
-    const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-    const mainContainer = new Rectangle();
-    mainContainer.height = 0.05;
-    mainContainer.width = 0.6;
-    mainContainer.thickness = 0;
-    mainContainer.background = "";
-    mainContainer.top = "0px";
-    mainContainer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-    mainContainer.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-    advancedTexture.addControl(mainContainer);
 
-    const containerbg = new Rectangle();
-    containerbg.thickness = 0;
-    containerbg.background = "lime";
-    //containerbg.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-    mainContainer.addControl(containerbg);
-
-    /*
-        let alpha = 0;
-        let beta = 0;
-        this.scene.onBeforeRenderObservable.add(function(){
-          image.top = beta;
-          containerbg.top = alpha;
-          image.isDirty = true;
-          containerbg.isDirty = true;
-          alpha += 1;
-          beta -= 1;
-          if(beta < -220){
-               alpha = 0;
-               beta = 0;
-          }
-          });*/
-    this.scene.onBeforeRenderObservable.add(() => {
-      containerbg.width = this.env.stamina / this.env.CONFIG.MAXSTAMINA;
-      //TODO : should be ratio over max
-    });
   }
   AddSpritesFromTag(tag: string): Mesh[] {
     const meshes = this.scene.getMeshesByTags(tag);

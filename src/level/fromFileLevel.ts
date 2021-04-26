@@ -1,4 +1,5 @@
 import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager } from "babylonjs";
+import { AdvancedDynamicTexture, Control, Rectangle } from "babylonjs-gui";
 import Character from "../components/character";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
 import Level from "./level";
@@ -60,6 +61,8 @@ export default class FromFileLevel extends Level {
     this.ManageGoodItems("Medusa");
     this.ManageBadItems("Bag");
 
+    this.ManageObstacles("Obstacle");
+
     const shadowGenerator = new ShadowGenerator(1024, dirlight);
     shadowGenerator.addShadowCaster(this._character.MainMesh)
     //shadowGenerator.getShadowMap().renderList.push();
@@ -68,6 +71,26 @@ export default class FromFileLevel extends Level {
     //replace camera by follow camera and copy information
     this._camera = this.CreateCameraFromExistingOne(this.scene.getCameraByName("Camera") as Camera, this._character)
     this.scene.activeCamera = this._camera;
+
+    const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    const mainContainer = new Rectangle();
+    mainContainer.height = 0.05;
+    mainContainer.width = 0.6;
+    mainContainer.thickness = 0;
+    mainContainer.background = "";
+    mainContainer.top = "0px";
+    mainContainer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+    mainContainer.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+    advancedTexture.addControl(mainContainer);
+
+    const containerbg = new Rectangle();
+    containerbg.thickness = 0;
+    containerbg.background = "lime";
+    mainContainer.addControl(containerbg);
+
+    this.scene.onBeforeRenderObservable.add(() => {
+      containerbg.width = this.env.stamina / this.env.CONFIG.MAXSTAMINA;
+    });
 
     return this.scene;
   };
@@ -133,14 +156,26 @@ export default class FromFileLevel extends Level {
       );
     });
   }
+  ManageObstacles(tagQuery: string): void {
+    const obstacle = this.scene.getMeshesByTags(tagQuery);
+    obstacle.forEach(item => {
+      item.checkCollisions = true;
+      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.SphereImpostor, {
+        mass: 0,
+        friction: 1.0
+      });
+    });
+  }
   removeItemAndSprite(name: string): void {
     const item = this.scene.getMeshByName(name);
     const spriteName = "sprite-" + name.split('-')[1];
     const sprite = this.spriteRefs[spriteName];
+    if (sprite) sprite.dispose();
+    if (item) item.dispose();
+    if (item && sprite) delete this.spriteRefs[spriteName];
+    //
 
-    //delete this.spriteRefs[spriteName];
-    sprite.dispose();
-    //item.dispose();
+    //
     //item.isVisible = false;
   }
 

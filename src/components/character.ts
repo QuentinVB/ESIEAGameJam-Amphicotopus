@@ -26,7 +26,7 @@ export default class Character extends GameObject {
   public turtleCameraTarget: AbstractMesh;
 
   private readonly TARGETDISTANCE = 1;
-  private readonly SPRITEOFFSET_Y = 1.4;
+  private readonly SPRITEOFFSET_Y = 0.5;
   private readonly BASESPEED = 0.3;
   private readonly MOVEMENTSPEED = 0.5;
 
@@ -35,7 +35,7 @@ export default class Character extends GameObject {
 
     if (mesh) {
       this.MainMesh = mesh;
-      //this.MainMesh.isVisible = false;
+      this.MainMesh.isVisible = false;
       //TODO : should cast shadow !
 
     }
@@ -95,6 +95,7 @@ export default class Character extends GameObject {
         //HACK : offsetX and Y are still experimentals /!\ check browser compatibility
         //console.log(`Δ ${mouseData.event.movementX}:${-mouseData.event.movementY} @ pos ${mouseData.event.offsetX}:${mouseData.event.offsetY}`);
         const MouseVector = new Vector3(mouseData.event.movementX * this.MOVEMENTSPEED, -mouseData.event.movementY * this.MOVEMENTSPEED, this.BASESPEED);
+        //TODO : if position close to 0 : reduce vertical speed (lerp around max and min)
         this.turtlePhysic.applyImpulse(MouseVector, this.MainMesh.getAbsolutePosition());
         //TODO : use mouse vector to animate orientation
         //Vector2.Lerp()

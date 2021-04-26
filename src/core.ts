@@ -1,5 +1,6 @@
 import { Engine, Scene, Vector3, Color4, Color3 } from 'babylonjs';
-import { Level, DefaultLevel, FromFileLevel } from './level/index';
+import { Level, DefaultLevel, FromFileLevel, MenuLevel } from './level/index';
+
 import ICreateLevelClass from './level/ICreateLevelClass'
 import { SoundLibrary } from './services/soundLib';
 /**
@@ -43,11 +44,11 @@ export default class Core {
     meshUrl: "./public/mesh/",
     soundUrl: "./public/sounds/",
     MEDUSASTAMINAVALUE: 10,
-    BAGSTAMINACOST: 10,
+    BAGSTAMINACOST: 20,
     BASESTAMINA: 50,
     MAXSTAMINA: 100,
     //add other ?
-    DEBUG: true
+    DEBUG: false
   }
 
   // Constructor
@@ -61,14 +62,15 @@ export default class Core {
    * Runs the engine to render the level into the canvas
    */
   public run(): void {
-    this.Init().then(() => {
+    const createLevelModule = this.loadLevel();
+    this.Init(createLevelModule).then(() => {
       // scene started rendering, everything is initialized
     });
   }
 
-  public async Init(): Promise<void> {
+  public async Init(createLevelModule: ICreateLevelClass): Promise<void> {
     //switch here (basic level)
-    const createLevelModule = this.loadLevel();//"level0"
+    //"level0"
 
     //load pre task in the module
     await Promise.all(createLevelModule.preTasks || []);
@@ -79,9 +81,14 @@ export default class Core {
     //engine options here !
 
     await createLevelModule.createLevel().then(() => {
-      this.level.InitLevel();
+
+      //TODO :music should be loaded from another scene
       this.soundLibrary = new SoundLibrary(this.level.scene, this.CONFIG.soundUrl);
       this.soundLibrary.loadSounds();
+
+      this.level.InitLevel();
+
+      this.soundLibrary.aquariumMusic.play();
       /*  
 var options = new BABYLON.SceneOptimizerOptions();
    options.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
@@ -93,7 +100,7 @@ var options = new BABYLON.SceneOptimizerOptions();
     });
 
 
-    this.soundLibrary.underwaterAmbient.play();
+
     const registred = this.registredFunction;
     this.scene.registerBeforeRender(() => {
       for (const callback of registred) {
@@ -111,13 +118,22 @@ var options = new BABYLON.SceneOptimizerOptions();
 
   public loadLevel(): ICreateLevelClass {
     //if (this.level) this.level.scene.dispose();
-    if (this.levelName) {
+    if (this.levelName && this.levelName == "start_menu") {
+      this.level = new MenuLevel(this);
+    }
+    else if (this.levelName) {
       this.level = new FromFileLevel(this);
     }
     else {
       this.level = new DefaultLevel(this);
     }
     return this.level;
+  }
+  public ChangeLevel(levelName?: string): void {
+    this.levelName = levelName;
+    //TODO : should dispose level correctly ?
+    if (this.level) this.level.scene.dispose();
+    this.run();
   }
   //TODO callback could request time ?
   public registerFunctionBeforeUpdate(callback: () => void): void {

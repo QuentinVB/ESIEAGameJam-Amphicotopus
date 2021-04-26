@@ -1,5 +1,6 @@
 import "./sass/style.scss";
 import Core from './core';
 
-const core = new Core("scene_layout");
+//scene_layout
+const core = new Core("start_menu");
 core.run();
