@@ -71,7 +71,7 @@ export default class MenuLevel extends Level {
     this.registredTransiton = () => {
 
       console.log("fade done");
-      this.env.ChangeLevel("scene_layout");
+      this.env.ChangeLevel("scene_level1");
     }
 
     //--SCENE FINISHED LOADING--

@@ -6,7 +6,7 @@ import Level from "./level";
 
 export default class FromFileLevel extends Level {
 
-  public _ground: Mesh = null;//TODO : should be ground
+  public _grounds: Mesh[] = [];//TODO : should be ground object
 
 
   public createLevel = async (): Promise<Scene> => {
@@ -42,39 +42,42 @@ export default class FromFileLevel extends Level {
 
     // load sprites
     this.spriteLibrary = new SpriteLibrary(this.scene);
-
-    for (const mesh of this.scene.meshes) {
-      //console.log(mesh.name);
-      //mesh.name.startsWith("Medusa")
-      switch (mesh.name) {
-        case "Turtle": this.ManageTurtle(mesh); break;
-        case "Ground": this.ManageGround(mesh); break;
-        //TODO : case rock ? (or tag collidable ?)
-        default:
-          break;
-      }
-    }
+    /*
+        for (const mesh of this.scene.meshes) {
+          //console.log(mesh.name);
+          switch (mesh.name) {
+            case "Turtle": this.ManageTurtle(mesh); break;
+            case "": break;
+            default:
+              break;
+          }
+        }*/
+    this.ManageTurtle(this.scene.getMeshByName("Turtle"));
     this.AddSpritesFromTag("Medusa");
     this.AddSpritesFromTag("PinkCoral");
     this.AddSpritesFromTag("Bag");
+    this.AddSpritesFromTag("Gorgon");
+    this.AddSpritesFromTag("Poisson");
 
     this.ManageGoodItems("Medusa");
     this.ManageBadItems("Bag");
+    this.ManageTrigger(this.scene.getMeshByName("Trigger"));
 
     this.ManageObstacles("Obstacle");
+    this.ManageGrounds("Ground");
 
     const shadowGenerator = new ShadowGenerator(1024, dirlight);
     shadowGenerator.addShadowCaster(this._character.MainMesh)
     //shadowGenerator.getShadowMap().renderList.push();
-    this._ground.receiveShadows = true;
 
     //replace camera by follow camera and copy information
     this._camera = this.CreateCameraFromExistingOne(this.scene.getCameraByName("Camera") as Camera, this._character)
     this.scene.activeCamera = this._camera;
 
+    //TODO : Move UI
     const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     const mainContainer = new Rectangle();
-    mainContainer.height = 0.05;
+    mainContainer.height = "20px";
     mainContainer.width = 0.6;
     mainContainer.thickness = 0;
     mainContainer.background = "";
@@ -86,6 +89,7 @@ export default class FromFileLevel extends Level {
     const containerbg = new Rectangle();
     containerbg.thickness = 0;
     containerbg.background = "lime";
+    containerbg.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     mainContainer.addControl(containerbg);
 
     this.scene.onBeforeRenderObservable.add(() => {
@@ -114,14 +118,27 @@ export default class FromFileLevel extends Level {
   ManageTurtle(mesh: AbstractMesh): void {
     this._character = new Character(this, mesh as Mesh);
   }
-  ManageGround(mesh: AbstractMesh): void {
-    this._ground = mesh as Mesh;
-    mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this.scene);
+  ManageGrounds(tagQuery: string): void {
+    this._grounds = this.scene.getMeshesByTags(tagQuery);
+    //TODO : should create ground items
+    this._grounds.forEach(item => {
+      //item.receiveShadows = true;
+      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 1 }, this.scene);
+    });
+    /*
+        this._grounds.push(this.scene.getMeshByName(tagQuery) as Mesh);
+        //TODO : should create ground items
+        this._grounds.forEach(item => {
+          item.receiveShadows = true;
+          item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 1 }, this.scene);
+        });*/
   }
+
   ManageGoodItems(tagQuery: string): void {
     const goodItems = this.scene.getMeshesByTags(tagQuery);
     goodItems.forEach(item => {
       item.checkCollisions = true;
+      if (this.env.CONFIG.DEBUG) item.isVisible = true;
       this._character.MainMesh.actionManager.registerAction(
         new ExecuteCodeAction(
           {
@@ -141,6 +158,7 @@ export default class FromFileLevel extends Level {
     const badItems = this.scene.getMeshesByTags(tagQuery);
     badItems.forEach(item => {
       item.checkCollisions = true;
+      if (this.env.CONFIG.DEBUG) item.isVisible = true;
       this._character.MainMesh.actionManager.registerAction(
         new ExecuteCodeAction(
           {
@@ -156,11 +174,26 @@ export default class FromFileLevel extends Level {
       );
     });
   }
+  ManageTrigger(mesh: AbstractMesh): void {
+    mesh.checkCollisions = true;
+    this._character.MainMesh.actionManager.registerAction(
+      new ExecuteCodeAction(
+        {
+          trigger: ActionManager.OnIntersectionEnterTrigger,
+          parameter: mesh
+        },
+        () => {
+          console.info("collided with victory !");
+        }
+      )
+    );
+  }
+
   ManageObstacles(tagQuery: string): void {
     const obstacle = this.scene.getMeshesByTags(tagQuery);
     obstacle.forEach(item => {
       item.checkCollisions = true;
-      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.SphereImpostor, {
+      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, {
         mass: 0,
         friction: 1.0
       });

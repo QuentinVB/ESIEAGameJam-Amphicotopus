@@ -35,7 +35,7 @@ export default class Character extends GameObject {
 
     if (mesh) {
       this.MainMesh = mesh;
-      this.MainMesh.isVisible = false;
+      this.MainMesh.isVisible = level.env.CONFIG.DEBUG;
       //TODO : should cast shadow !
 
     }

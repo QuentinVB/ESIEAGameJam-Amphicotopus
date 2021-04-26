@@ -40,4 +40,18 @@ export class SpriteLibrary implements ISpriteLibrary {
     animationDelay: 200,
     size: 4
   };
+  ["Gorgon"] = {
+    manager: new SpriteManager("gorgonSpriteManager", "./public/img/Sprite-Gorgon-4x4-min.png", 100, 128, scene),
+    animationStart: 0,
+    animationEnd: 13,
+    animationDelay: 200,
+    size: 4
+  };
+  ["Poisson"] = {
+    manager: new SpriteManager("poissonSpriteManager", "./public/img/Sprite-Poisson-2x2-min.png", 100, 128, scene),
+    animationStart: 0,
+    animationEnd: 3,
+    animationDelay: 360,
+    size: 2
+  };
 }

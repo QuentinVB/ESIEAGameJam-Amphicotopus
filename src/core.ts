@@ -48,7 +48,7 @@ export default class Core {
     BASESTAMINA: 50,
     MAXSTAMINA: 100,
     //add other ?
-    DEBUG: false
+    DEBUG: true
   }
 
   // Constructor
@@ -118,7 +118,7 @@ var options = new BABYLON.SceneOptimizerOptions();
 
   public loadLevel(): ICreateLevelClass {
     //if (this.level) this.level.scene.dispose();
-    if (this.levelName && this.levelName == "start_menu") {
+    if (this.levelName && this.levelName == "scene_start_menu") {
       this.level = new MenuLevel(this);
     }
     else if (this.levelName) {
