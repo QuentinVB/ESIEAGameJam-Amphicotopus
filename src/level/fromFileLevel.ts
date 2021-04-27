@@ -1,4 +1,4 @@
-import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager } from "babylonjs";
+import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager, Sound } from "babylonjs";
 import { AdvancedDynamicTexture, Control, Rectangle, Image } from "babylonjs-gui";
 import Character from "../components/character";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
@@ -23,6 +23,14 @@ export default class FromFileLevel extends Level {
           this.scene.fogEnd = this.env.CONFIG.FOG_END;
         }
       });
+    //SOUND
+    /*
+    const underwaterAmbient = new Sound("underwaterambient", this.env.CONFIG.soundUrl + "Ambiance-ocean.mp3", this.scene, () => {
+      underwaterAmbient.play();
+    }, {
+      volume: 0.1,
+    });*/
+    this.env.soundLibrary.underwaterAmbient.play();
 
 
     //PHYSIC
@@ -45,6 +53,7 @@ export default class FromFileLevel extends Level {
 
     this.ManageObstacles("Obstacle");
     this.ManageGrounds("Ground");
+    this.CreateOceanRoof();
 
     //LIGHTS
     //TODO : should be removed
@@ -73,6 +82,8 @@ export default class FromFileLevel extends Level {
     //STATE
     const trigger = this.scene.getMeshByName("Trigger");
     this.gameState = new States.Game(this.env, trigger as Mesh);
+
+
 
     return this.scene;
   };
@@ -128,6 +139,7 @@ export default class FromFileLevel extends Level {
     const bgContainer = new Rectangle("bgContainer");
     bgContainer.width = size * 996 + "px";
     bgContainer.height = size * 145 + "px";
+    bgContainer.thickness = 0;
     bgContainer.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_TOP;
     bgContainer.horizontalAlignment = Rectangle.HORIZONTAL_ALIGNMENT_CENTER;
     advancedTexture.addControl(bgContainer);
@@ -149,7 +161,7 @@ export default class FromFileLevel extends Level {
     //TODO : should create ground items
     this._grounds.forEach(item => {
       //item.receiveShadows = true;
-      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 1 }, this.scene);
+      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0 }, this.scene);
     });
     /*
         this._grounds.push(this.scene.getMeshByName(tagQuery) as Mesh);
@@ -174,6 +186,8 @@ export default class FromFileLevel extends Level {
           () => {
             this.env.stamina += this.env.CONFIG.MEDUSASTAMINAVALUE;
             console.info("collided with medusa !");
+            //this.env.soundLibrary.crounch.stop();
+            this.env.soundLibrary.crounch.play();
             this.removeItemAndSprite(item.name);
           }
         )
@@ -194,8 +208,8 @@ export default class FromFileLevel extends Level {
           () => {
             this.env.stamina -= this.env.CONFIG.BAGSTAMINACOST;
             console.info("collided with bag !");
+            this.env.soundLibrary.bonk.play();
             this.removeItemAndSprite(item.name);
-
           }
         )
       );
@@ -225,6 +239,10 @@ export default class FromFileLevel extends Level {
     //
     //item.isVisible = false;
   }
+  CreateOceanRoof(): void {
+    //throw new Error("Method not implemented.");
+  }
+
 
 
   //TODO : should refactor sprite creation...

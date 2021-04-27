@@ -1,6 +1,6 @@
 import Level from '../level/level'
 import { Vector3, PhysicsImpostor, Mesh, SpriteManager, Sprite, KeyboardEventTypes, PointerEventTypes, AbstractMesh, ActionManager } from 'babylonjs';
-
+import { KEYS } from '../common';
 import GameObject from './gameobject';
 
 interface ITurtleState {
@@ -52,6 +52,7 @@ export default class Character extends GameObject {
     this.turtlePhysic.registerBeforePhysicsStep(() => {
       //lock rotation
       this.turtlePhysic.setAngularVelocity(Vector3.Zero());
+      this.turtlePhysic.applyImpulse(Vector3.Forward().scale(this.BASESPEED), this.MainMesh.getAbsolutePosition());
     });
     this.LoadTurtleStates();
     this.UpdateTurtleState(TurtleState.Idle);
@@ -63,22 +64,20 @@ export default class Character extends GameObject {
     this.Scene.onKeyboardObservable.add((kbInfo) => {
       if (kbInfo.type == KeyboardEventTypes.KEYDOWN) {
         switch (kbInfo.event.keyCode) {
-          case 90://Z - UP
+          case KEYS.UP://UP
             console.log("pressed Z");
             //this.MainMesh.rotate(Vector3.Right(), -Math.PI / 8);
-            this.turtlePhysic.applyImpulse(Vector3.Up(), this.MainMesh.getAbsolutePosition())
+            this.turtlePhysic.applyImpulse(Vector3.Up().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
             break;
-          case 81://Q - LEFT
-            this.turtlePhysic.applyImpulse(Vector3.Left(), this.MainMesh.getAbsolutePosition());
+          case KEYS.LEFT://Q - LEFT
+            this.turtlePhysic.applyImpulse(Vector3.Left().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition());
             this.turtle.angle = Math.PI / 8;
             break;
-          case 83://S - DOWN
-
-            this.turtlePhysic.applyImpulse(Vector3.Down(), this.MainMesh.getAbsolutePosition())
+          case KEYS.DOWN://S - DOWN
+            this.turtlePhysic.applyImpulse(Vector3.Down().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
             break;
-          case 68://D - RIGHT
-
-            this.turtlePhysic.applyImpulse(Vector3.Right(), this.MainMesh.getAbsolutePosition())
+          case KEYS.RIGHT://D - RIGHT
+            this.turtlePhysic.applyImpulse(Vector3.Right().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
             this.turtle.angle = -Math.PI / 8;
             break;
           //spaceBar
@@ -89,9 +88,9 @@ export default class Character extends GameObject {
         }
       }
     });
+    /*
     this.Scene.onPointerObservable.add((mouseData) => {
       if (mouseData.type == PointerEventTypes.POINTERMOVE) {
-
         //HACK : offsetX and Y are still experimentals /!\ check browser compatibility
         //console.log(`Δ ${mouseData.event.movementX}:${-mouseData.event.movementY} @ pos ${mouseData.event.offsetX}:${mouseData.event.offsetY}`);
         const MouseVector = new Vector3(mouseData.event.movementX * this.MOVEMENTSPEED, -mouseData.event.movementY * this.MOVEMENTSPEED, this.BASESPEED);
@@ -102,7 +101,7 @@ export default class Character extends GameObject {
 
       }
     });
-
+*/
     //let forwardLine;
     this.Env.registerFunctionBeforeUpdate(() => {
       //update sprite position

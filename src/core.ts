@@ -1,4 +1,4 @@
-import { Engine, Scene, Vector3, Color4, Color3 } from 'babylonjs';
+import { Engine, Scene, Vector3, Color4, Color3, SceneOptimizerOptions, HardwareScalingOptimization, SceneOptimizer } from 'babylonjs';
 import { Level, DefaultLevel, FromFileLevel, MenuLevel, CutsceneLevel } from './level/index';
 
 import ICreateLevelClass from './level/ICreateLevelClass'
@@ -18,7 +18,7 @@ export default class Core {
   public get scene(): Scene {
     return this.level.scene;
   }
-  public soundLibrary: SoundLibrary;
+  public soundLibrary: SoundLibrary = null;
   //score
   public stamina: number;
 
@@ -74,6 +74,8 @@ export default class Core {
     this.registredFunction = [];
     this.stamina = this.CONFIG.BASESTAMINA;
 
+
+
   }
   /**
    * Runs the engine to render the level into the canvas
@@ -94,23 +96,45 @@ export default class Core {
     this.engine = new Engine(this.canvas, true);
     //engine options here !
 
+    if (this.soundLibrary === null) {
+      this.soundLibrary = new SoundLibrary(this.engine, this.CONFIG.soundUrl);
+      this.soundLibrary.loadSounds();
+      //this.soundLibrary.aquariumMusic.play();
+    }
+
     await createLevelModule.createLevel().then(() => {
       //TODO :music should be loaded from another scene
-      this.soundLibrary = new SoundLibrary(this.level.scene, this.CONFIG.soundUrl);
-      this.soundLibrary.loadSounds();
+
 
       this.level.InitLevel();
+      //
 
-      this.soundLibrary.aquariumMusic.play();
-      /*  
-var options = new BABYLON.SceneOptimizerOptions();
-   options.addOptimization(new BABYLON.HardwareScalingOptimization(0, 1));
 
-   // Optimizer
-   var optimizer = new BABYLON.SceneOptimizer(this.scene, options);
-   optimizer.start();*/
+
+      if (!this.CONFIG.DEBUG) {
+        const options = new SceneOptimizerOptions();
+        //options.a
+        //options.addOptimization(new HardwareScalingOptimization(0, 1));
+
+        // Optimizer
+        const optimizer = new SceneOptimizer(this.scene, options);
+        optimizer.start();
+      }
+
+
     });
     const registred = this.registredFunction;
+    /*
+    this.canvas.onclick = () => {
+      console.log("clicked on canvas");
+      this.soundLibrary.loadSounds().then(() => {
+        console.log("sound loaded !");
+        Engine.audioEngine.unlock();
+        this.soundLibrary.underwaterAmbient.play();
+      });
+
+    };
+*/
     this.scene.registerBeforeRender(() => {
       for (const callback of registred) {
         callback();

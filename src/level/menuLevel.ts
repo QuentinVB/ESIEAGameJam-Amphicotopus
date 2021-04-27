@@ -90,8 +90,8 @@ export default class MenuLevel extends Level {
         effect.setFloat("fadeLevel", this.fadeLevel);
       };
       this._transition = true;
-      //sounds
-      //sfx.play();
+
+
 
       //scene.detachControl(); //observables disabled
 
