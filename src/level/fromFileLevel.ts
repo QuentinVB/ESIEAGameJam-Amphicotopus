@@ -1,4 +1,4 @@
-import { AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager, Sound } from "babylonjs";
+import { Texture, Color3, StandardMaterial, AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, MeshBuilder, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager, Sound } from "babylonjs";
 import { AdvancedDynamicTexture, Control, Rectangle, Image } from "babylonjs-gui";
 import Character from "../components/character";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
@@ -39,9 +39,29 @@ export default class FromFileLevel extends Level {
     //SPRITE
     this.spriteLibrary = new SpriteLibrary(this.scene);
 
-    //LOAD OBJECTS
+
+
+
+    //LOAD turtle
     this.ManageTurtle(this.scene.getMeshByName("Turtle"));
 
+    //LIGHTS
+    //TODO : should be removed
+    const dome = new HemisphericLight("light", new Vector3(0, -1, 0), this.scene);
+    dome.intensity = 0.7;
+    const dirlight = new DirectionalLight("sun", new Vector3(0, -1, 0.5), this.scene);
+    /*
+    dirlight.autoCalcShadowZBounds = true;
+    const shadowGenerator = new ShadowGenerator(1024, dirlight);
+    shadowGenerator.addShadowCaster(this._character.MainMesh);
+    //shadowGenerator.useExponentialShadowMap = true;
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    //shadowGenerator.useKernelBlur = true;
+    //shadowGenerator.blurKernel = 64;
+    //shadowGenerator.getShadowMap().renderList.push();
+    shadowGenerator.darkness = 0.3;*/
+
+    //LOAD OBJECTS
     this.AddSpritesFromTag("Medusa");
     this.AddSpritesFromTag("PinkCoral");
     this.AddSpritesFromTag("Bag");
@@ -55,15 +75,6 @@ export default class FromFileLevel extends Level {
     this.ManageGrounds("Ground");
     this.CreateOceanRoof();
 
-    //LIGHTS
-    //TODO : should be removed
-    const light = new HemisphericLight("light", new Vector3(0, 1, 0), this.scene);
-    light.intensity = 0.7;
-    const dirlight = new DirectionalLight("pointLight", new Vector3(0, -1, 0), this.scene);
-
-    const shadowGenerator = new ShadowGenerator(1024, dirlight);
-    shadowGenerator.addShadowCaster(this._character.MainMesh)
-    //shadowGenerator.getShadowMap().renderList.push();
 
     //CAMERA
     this._camera = this.CreateCameraFromExistingOne(this.scene.getCameraByName("Camera") as Camera, this._character)
@@ -161,6 +172,7 @@ export default class FromFileLevel extends Level {
     //TODO : should create ground items
     this._grounds.forEach(item => {
       //item.receiveShadows = true;
+      //console.log(item.receiveShadows);
       item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0 }, this.scene);
     });
     /*
@@ -241,6 +253,17 @@ export default class FromFileLevel extends Level {
   }
   CreateOceanRoof(): void {
     //throw new Error("Method not implemented.");
+    const sea = MeshBuilder.CreateGround("sea", { width: 512, height: 512 }, this.scene);
+    sea.position = new Vector3(0, 10, 0);
+    sea.rotation = new Vector3(0, 0, Math.PI);
+
+    const water = new StandardMaterial("water", this.scene);
+    water.diffuseColor = new Color3(0.7, 0.8, 0.9);
+    const waterTexture = new Texture("./public/img/water.jpg", this.scene);
+    waterTexture.uScale = 5.0;
+    waterTexture.vScale = 5.0;
+    water.diffuseTexture = waterTexture;
+    sea.material = water;
   }
 
 

@@ -29,6 +29,9 @@ export default class Character extends GameObject {
   private readonly SPRITEOFFSET_Y = 0.5;
   private readonly BASESPEED = 0.3;
   private readonly MOVEMENTSPEED = 0.5;
+  private readonly MAXINCLINAISONANGLE = Math.PI / 8;
+  private readonly TURNSPEED = 0.05;
+  private turtleAngleValue = 0;
 
   constructor(level: Level, mesh?: Mesh) {
     super(level);
@@ -65,20 +68,18 @@ export default class Character extends GameObject {
       if (kbInfo.type == KeyboardEventTypes.KEYDOWN) {
         switch (kbInfo.event.keyCode) {
           case KEYS.UP://UP
-            console.log("pressed Z");
-            //this.MainMesh.rotate(Vector3.Right(), -Math.PI / 8);
             this.turtlePhysic.applyImpulse(Vector3.Up().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
             break;
           case KEYS.LEFT://Q - LEFT
             this.turtlePhysic.applyImpulse(Vector3.Left().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition());
-            this.turtle.angle = Math.PI / 8;
+            this.turtleAngleValue += this.TURNSPEED;
             break;
           case KEYS.DOWN://S - DOWN
             this.turtlePhysic.applyImpulse(Vector3.Down().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
             break;
           case KEYS.RIGHT://D - RIGHT
             this.turtlePhysic.applyImpulse(Vector3.Right().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
-            this.turtle.angle = -Math.PI / 8;
+            this.turtleAngleValue -= this.TURNSPEED;
             break;
           //spaceBar
           case 32:
@@ -110,6 +111,7 @@ export default class Character extends GameObject {
       this.turtlePhysic.setLinearVelocity(Vector3.Clamp(this.turtlePhysic.getLinearVelocity(), this.Env.CONFIG.MIN_VELOCITY_VECTOR, this.Env.CONFIG.MAX_VELOCITY_VECTOR));
       //if (forwardLine) forwardLine.dispose();
       //forwardLine = Helpers.DrawVector(this.Scene, this.MainMesh.forward, 7, this.MainMesh.getAbsolutePosition(), Color3.Purple());
+      this.turtleAngleUpdater();
 
       //TODO : countdown, when done and no button pressed, reset
       if (this.turtlePhysic.getLinearVelocity().length() > 0.1 && this.turtleState.state == TurtleState.Idle) {
@@ -121,6 +123,22 @@ export default class Character extends GameObject {
     });
 
 
+  }
+  turtleAngleUpdater(): void {
+    if (this.MAXINCLINAISONANGLE < this.turtleAngleValue) this.turtleAngleValue = this.MAXINCLINAISONANGLE;
+    if (this.turtleAngleValue < -this.MAXINCLINAISONANGLE) this.turtleAngleValue = -this.MAXINCLINAISONANGLE;
+
+    if (!(-0.05 < this.turtleAngleValue && this.turtleAngleValue < 0.05)) {
+      if (this.turtleAngleValue < 0) this.turtleAngleValue += this.TURNSPEED * 0.5;
+      if (this.turtleAngleValue > 0) this.turtleAngleValue -= this.TURNSPEED * 0.5;
+    }
+    else {
+      this.turtleAngleValue = 0;
+      const lv = this.turtlePhysic.getLinearVelocity();
+      this.turtlePhysic.setLinearVelocity(new Vector3(0, lv.y, lv.z));
+    }
+    //console.log(this.turtleAngleValue);
+    this.turtle.angle = this.turtleAngleValue;
   }
   LoadTurtleStates(): void {
     TurtleStates[TurtleState.Idle] = {
@@ -138,6 +156,7 @@ export default class Character extends GameObject {
       animationDelay: 120,
     }
   }
+
 
   UpdateTurtleState(state: TurtleState): void {
     const newstate = TurtleStates[state];

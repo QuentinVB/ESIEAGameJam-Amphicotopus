@@ -37,10 +37,10 @@ export default class Core {
     JUMP_FORCE: 4,
     SPEED: 3,
     GRAVITY: 0,//-9.81
-    BG_COLOR: new Color4(52 / 255, 99 / 255, 185 / 255, 1),
-    FOG_COLOR: new Color3(65 / 255, 188 / 255, 238 / 255),
+    BG_COLOR: new Color4(40 / 255, 105 / 255, 144 / 255, 1),//new Color4(52 / 255, 99 / 255, 185 / 255, 1)
+    FOG_COLOR: new Color3(40 / 255, 105 / 255, 144 / 255),//(65 / 255, 188 / 255, 238 / 255)
     FOG_START: 5,
-    FOG_END: 30,
+    FOG_END: 40,
     meshUrl: "./public/mesh/",
     soundUrl: "./public/sounds/",
     MEDUSASTAMINAVALUE: 10,
@@ -49,6 +49,7 @@ export default class Core {
     MAXSTAMINA: 100,
     //add other ?
     DEBUG: false
+
   }
 
   private readonly SCENARIO = [
@@ -59,12 +60,12 @@ export default class Core {
     "death"
   ];
   private _scenarioStep: number;
-  private _byPassScenario = false;
+  public byPassScenario = false;
   private loading: boolean;
   // Constructor
   constructor(startlevelName?: string) {
     if (startlevelName) {
-      this._byPassScenario = true;
+      this.byPassScenario = true;
       this.levelName = startlevelName;
     }
     else {
@@ -150,9 +151,9 @@ export default class Core {
   }
 
   public loadLevel(): ICreateLevelClass {
-    if (this.level) this.level.scene.dispose();
 
-    if (this._byPassScenario) {
+
+    if (this.byPassScenario) {
       if (this.levelName == "scene_start_menu") {
         this.level = new MenuLevel(this);
       }
@@ -164,6 +165,8 @@ export default class Core {
       }
     }
     else {
+      if (this.level) this.level.scene.dispose();
+
       const scenario = this.SCENARIO[this._scenarioStep];
       console.log(`load scenario, scene number ${this._scenarioStep} : "${scenario}"`);
       if (scenario === "menu") this.level = new MenuLevel(this);
