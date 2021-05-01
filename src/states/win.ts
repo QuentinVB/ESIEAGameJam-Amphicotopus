@@ -18,6 +18,7 @@ export default class StateWin extends AbstractState {
   public Update(): void {
     if (this.active) {
       this.active = false;
+      this.context.soundLibrary.underwaterAmbient.pause();
       this.context.setScenarioStep(3);
       this.Next(new Default(this.context));
     }

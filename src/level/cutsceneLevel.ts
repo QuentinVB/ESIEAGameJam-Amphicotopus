@@ -1,5 +1,6 @@
-import { Camera, Color3, FreeCamera, Mesh, MeshBuilder, PointerEventTypes, PostProcess, Scene, StandardMaterial, Vector3, VideoTexture } from "babylonjs";
-import { AdvancedDynamicTexture, Rectangle, Image, TextBlock, Control, Button } from "babylonjs-gui";
+import { KeyboardEventTypes, Camera, Color3, FreeCamera, Mesh, MeshBuilder, PointerEventTypes, PostProcess, Scene, StandardMaterial, Vector3, VideoTexture } from "babylonjs";
+import { AdvancedDynamicTexture, Rectangle, Image, StackPanel, Control, Button } from "babylonjs-gui";
+import { KEYS } from '../common';
 import Core from "../core";
 import Level from "./level";
 
@@ -74,17 +75,81 @@ export default class CutsceneLevel extends Level {
     guiMenu.addControl(imageRect);
 
     //TODO : animage from slideshow !!!
-    const startbg = new Image("bd_image", "./public/img/BD_Intro.png");
-    startbg.stretch = Image.STRETCH_UNIFORM;
-    imageRect.addControl(startbg);
+    //const imgBD = new Image("bd_image", "./public/img/BD_Intro.png");
+    const cellCount = 5;
+    const imgBD = new Image("bd_image", "./public/img/Sprite-BD-1x5-min.png");
+    imgBD.stretch = Image.STRETCH_UNIFORM;
+    imgBD.cellId = 0;
+    imgBD.cellHeight = 540;
+    imgBD.cellWidth = 4800 / cellCount;
+    imgBD.sourceHeight = 540;
+    imgBD.sourceWidth = 540;
+    imageRect.addControl(imgBD);
+    /*
+        const comicTimer = setInterval(() => {
+          if (imgBD.cellId < cellCount - 1) {
+            imgBD.cellId++;
+          } else {
+            imgBD.cellId = 0;
+          }
+        }, 2500);*/
 
-    //TODO : make it better
+    const slideShowControllerRect = new StackPanel("comicControlRect");
+    slideShowControllerRect.width = "90px";
+    slideShowControllerRect.height = "40px";
+    slideShowControllerRect.isVertical = false;
+    slideShowControllerRect.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_BOTTOM;
+    slideShowControllerRect.horizontalAlignment = Rectangle.HORIZONTAL_ALIGNMENT_CENTER;
+    imageRect.addControl(slideShowControllerRect);
+
+    const previousBtn = Button.CreateImageOnlyButton("previous", "./public/img/arrowBtn.png");
+    previousBtn.image.stretch = Image.STRETCH_UNIFORM;
+    previousBtn.image.rotation = -Math.PI / 2;
+    previousBtn.width = "40px";
+    previousBtn.height = "40px";
+    previousBtn.thickness = 0;
+    slideShowControllerRect.addControl(previousBtn);
+    previousBtn.onPointerDownObservable.add(() => {
+      ComicBackward();
+
+    });
+
+    const nextBtn = Button.CreateImageOnlyButton("next", "./public/img/arrowBtn.png");
+    nextBtn.image.stretch = Image.STRETCH_UNIFORM;
+    nextBtn.image.rotation = Math.PI / 2;
+    nextBtn.width = "40px";
+    nextBtn.height = "40px";
+    nextBtn.thickness = 0;
+    slideShowControllerRect.addControl(nextBtn);
+    nextBtn.onPointerDownObservable.add(() => {
+      ComicForward();
+    });
+
+    this.scene.onKeyboardObservable.add((kbInfo) => {
+      // console.log("key pressed");
+      if (kbInfo.type == KeyboardEventTypes.KEYDOWN) {
+        switch (kbInfo.event.keyCode) {
+          case KEYS.LEFT: ComicBackward(); break;
+          case KEYS.RIGHT: ComicForward(); break;
+        }
+      }
+    });
+
+    function ComicForward() {
+      imgBD.cellId = (imgBD.cellId < cellCount - 1) ? imgBD.cellId + 1 : 0;
+    }
+    function ComicBackward() {
+      imgBD.cellId = (imgBD.cellId > 0) ? imgBD.cellId - 1 : cellCount - 1;
+    }
+
+
     const startBtn = Button.CreateSimpleButton("Skip", "SKIP");
     startBtn.fontFamily = "Viga";
     startBtn.width = 0.2
     startBtn.height = "40px";
     startBtn.color = "white";
-    startBtn.thickness = 0;
+    startBtn.thickness = 1;
+    startBtn.cornerRadius = 5;
     startBtn.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     startBtn.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     imageRect.addControl(startBtn);
@@ -92,8 +157,10 @@ export default class CutsceneLevel extends Level {
     startBtn.onPointerDownObservable.add(() => {
       //fade screen
       this._transition = true;
+      //clearInterval(comicTimer);
       console.log("launch the game !")
     });
+
     this.registredTransiton = () => {
       console.log("fade done");
       this.env.setScenarioStep(2);

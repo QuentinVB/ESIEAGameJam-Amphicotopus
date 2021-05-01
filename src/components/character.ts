@@ -1,5 +1,5 @@
 import Level from '../level/level'
-import { Vector3, PhysicsImpostor, Mesh, SpriteManager, Sprite, KeyboardEventTypes, PointerEventTypes, AbstractMesh, ActionManager } from 'babylonjs';
+import { Vector3, PhysicsImpostor, Mesh, SpriteManager, Sprite, KeyboardEventTypes, AbstractMesh, ActionManager } from 'babylonjs';
 import { KEYS } from '../common';
 import GameObject from './gameobject';
 

@@ -1,6 +1,6 @@
-import { Engine, Scene, Vector3, Color4, Color3, SceneOptimizerOptions, HardwareScalingOptimization, SceneOptimizer } from 'babylonjs';
+import { Engine, Scene, Vector3, Color4, Color3, SceneOptimizerOptions, SceneOptimizer, KeyboardEventTypes } from 'babylonjs';
 import { Level, DefaultLevel, FromFileLevel, MenuLevel, CutsceneLevel } from './level/index';
-
+import { KEYS } from './common';
 import ICreateLevelClass from './level/ICreateLevelClass'
 import { SoundLibrary } from './services/soundLib';
 /**
@@ -15,12 +15,14 @@ export default class Core {
   public level: Level;
   public levelName: string;
   public canvas: HTMLCanvasElement;
+  private pauseElement: HTMLDivElement;
   public get scene(): Scene {
     return this.level.scene;
   }
   public soundLibrary: SoundLibrary = null;
   //score
   public stamina: number;
+  public isPaused = false;
 
   private registredFunction = [];
 
@@ -47,6 +49,7 @@ export default class Core {
     BAGSTAMINACOST: 20,
     BASESTAMINA: 50,
     MAXSTAMINA: 100,
+    FISHSPEED: 40,//the smaller the faster
     //add other ?
     DEBUG: false
 
@@ -96,6 +99,7 @@ export default class Core {
     this.canvas = <HTMLCanvasElement>document.getElementById('renderCanvas');
     this.engine = new Engine(this.canvas, true);
     //engine options here !
+    this.pauseElement = this.CreatePauseElement()
 
     if (this.soundLibrary === null) {
       this.soundLibrary = new SoundLibrary(this.engine, this.CONFIG.soundUrl);
@@ -105,12 +109,7 @@ export default class Core {
 
     await createLevelModule.createLevel().then(() => {
       //TODO :music should be loaded from another scene
-
-
       this.level.InitLevel();
-      //
-
-
 
       if (!this.CONFIG.DEBUG) {
         const options = new SceneOptimizerOptions();
@@ -121,7 +120,17 @@ export default class Core {
         const optimizer = new SceneOptimizer(this.scene, options);
         optimizer.start();
       }
-
+      //bind controls
+      this.scene.onKeyboardObservable.add((kbInfo) => {
+        if (kbInfo.type == KeyboardEventTypes.KEYDOWN) {
+          switch (kbInfo.event.keyCode) {
+            case KEYS.ESC://UP
+              this.TogglePauseMenu();
+              console.log("pressed escape");
+              break;
+          }
+        }
+      });
 
     });
     const registred = this.registredFunction;
@@ -142,13 +151,14 @@ export default class Core {
       }
     });
     this.engine.runRenderLoop(() => {
-      if (!this.loading) this.scene.render();
+      if (!this.loading && !this.isPaused) this.scene.render();
     });
 
     window.addEventListener("resize", () => {
       this.engine.resize();
     });
   }
+
 
   public loadLevel(): ICreateLevelClass {
 
@@ -196,6 +206,19 @@ export default class Core {
   //TODO callback could request time ?
   public registerFunctionBeforeUpdate(callback: () => void): void {
     this.registredFunction.push(callback);
+  }
+  private TogglePauseMenu() {
+    if (this.level instanceof FromFileLevel) {
+      this.isPaused = !this.isPaused;
+      this.pauseElement.style.visibility = (this.isPaused == true) ? "visible" : "hidden";
+    }
+  }
+  CreatePauseElement(): HTMLDivElement {
+    const element = document.createElement("div");
+    element.innerHTML = "Game Paused<p>Press ESC to resume</p>";
+    element.classList.add("pause");
+    document.body.appendChild(element);
+    return element;
   }
   //goto()per state
 }

@@ -1,4 +1,4 @@
-import { Scene, Camera, Vector3, KeyboardEventTypes, Mesh, Sprite, Effect } from 'babylonjs';
+import { Scene, Camera, Vector3, Animation, Mesh, Sprite, Effect } from 'babylonjs';
 import Helpers from '../helpers/helpers'
 import Core from '../core'
 import { ISpriteInfo, SpriteLibrary } from '../services/index';
@@ -23,7 +23,7 @@ export default abstract class Level implements ICreateLevelClass {
 
   //protected
   protected spriteLibrary: SpriteLibrary;
-  protected spriteRefs: Sprite[] = [];
+  protected spriteRefs: { [name: string]: Sprite } = {};
 
   constructor(env: Core) {
     this.env = env;
@@ -67,7 +67,7 @@ export default abstract class Level implements ICreateLevelClass {
     const spriteInfo: ISpriteInfo = this.spriteLibrary[tag];
     for (const mesh of meshes) {
       const code = Math.random().toString(16);
-      const instanceOfSprite = new Sprite("sprite-" + code, spriteInfo.manager);
+      const instanceOfSprite = new Sprite(tag + "-" + code, spriteInfo.manager);
       instanceOfSprite.playAnimation(spriteInfo.animationStart, spriteInfo.animationEnd, true, spriteInfo.animationDelay);
       instanceOfSprite.size = spriteInfo.size;
       instanceOfSprite.position = mesh.position;
@@ -78,9 +78,28 @@ export default abstract class Level implements ICreateLevelClass {
     }
     return meshes;
   }
-  /*
-   * load the meshes from the file and assign the rôles
-   */
+  AddFishAnimationFor(tag: string): void {
+    Object.keys(this.spriteRefs).forEach((key) => {
+      const sprite = this.spriteRefs[key];
+      if (sprite.name.split('-')[0] == tag) {
+        const positionXOffset = sprite.position.x;
+        let timer = 0;
+        const randomOffset = 300 + Math.round(Math.random() * 100);
+        this.env.registerFunctionBeforeUpdate(() => {
+          timer++;
+          const value = (timer + randomOffset) / this.env.CONFIG.FISHSPEED;
+          sprite.position.x = positionXOffset + Math.sin(value) * randomOffset / 100;
+
+          if (Math.cos(value) > 0) sprite.invertU = true;
+          else sprite.invertU = false;
+
+          //console.log(sprite.position.x);
+
+        })
+        if (this.env.CONFIG.DEBUG) console.log("added animation for " + sprite.name);
+      }
+    })
+  }
 
 
   private bindActions() {

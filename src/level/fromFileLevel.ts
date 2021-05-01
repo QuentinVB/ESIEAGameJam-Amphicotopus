@@ -1,14 +1,15 @@
 import { Texture, Color3, StandardMaterial, AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, MeshBuilder, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager, Sound } from "babylonjs";
 import { AdvancedDynamicTexture, Control, Rectangle, Image } from "babylonjs-gui";
-import Character from "../components/character";
+import { Character, SeaLevel } from "../components/index";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
 import Level from "./level";
 import * as States from '../states/index';
+import { WaterMaterial } from "babylonjs-materials";
 
 export default class FromFileLevel extends Level {
 
   public _grounds: Mesh[] = [];//TODO : should be ground object
-
+  public _seaLevel: SeaLevel;
 
   public createLevel = async (): Promise<Scene> => {
     await SceneLoader.LoadAsync(this.env.CONFIG.meshUrl, this.env.levelName + ".babylon", this.env.engine)
@@ -67,6 +68,7 @@ export default class FromFileLevel extends Level {
     this.AddSpritesFromTag("Bag");
     this.AddSpritesFromTag("Gorgon");
     this.AddSpritesFromTag("Poisson");
+    this.AddFishAnimationFor("Poisson");
 
     this.ManageGoodItems("Medusa");
     this.ManageBadItems("Bag");
@@ -109,15 +111,16 @@ export default class FromFileLevel extends Level {
     originalCamera.position.toArray(originalCoordinates);
     const camera = new FollowCamera("MainCamera", Vector3.Zero(), this.scene);
     camera.fov = originalCamera.fov;
-    camera.maxZ = 500;
+    camera.maxZ = 150;
     camera.radius = 7;
     camera.lowerRadiusLimit = 4;
     camera.upperRadiusLimit = 8;
-    camera.heightOffset = 1;
+    camera.heightOffset = 0;
     camera.rotationOffset = 180;
     camera.cameraAcceleration = 0.5;
     camera.maxCameraSpeed = 20;
     camera.inertia = 0.5;
+    //camera.ellipsoid = new Vector3(1, 1, 1);
     camera.lockedTarget = targetCharacter.turtleCameraTarget; //version 2.5 onwards
     return camera;
   }
@@ -175,13 +178,6 @@ export default class FromFileLevel extends Level {
       //console.log(item.receiveShadows);
       item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0 }, this.scene);
     });
-    /*
-        this._grounds.push(this.scene.getMeshByName(tagQuery) as Mesh);
-        //TODO : should create ground items
-        this._grounds.forEach(item => {
-          item.receiveShadows = true;
-          item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 1 }, this.scene);
-        });*/
   }
 
   ManageGoodItems(tagQuery: string): void {
@@ -252,18 +248,7 @@ export default class FromFileLevel extends Level {
     //item.isVisible = false;
   }
   CreateOceanRoof(): void {
-    //throw new Error("Method not implemented.");
-    const sea = MeshBuilder.CreateGround("sea", { width: 512, height: 512 }, this.scene);
-    sea.position = new Vector3(0, 10, 0);
-    sea.rotation = new Vector3(0, 0, Math.PI);
-
-    const water = new StandardMaterial("water", this.scene);
-    water.diffuseColor = new Color3(0.7, 0.8, 0.9);
-    const waterTexture = new Texture("./public/img/water.jpg", this.scene);
-    waterTexture.uScale = 5.0;
-    waterTexture.vScale = 5.0;
-    water.diffuseTexture = waterTexture;
-    sea.material = water;
+    this._seaLevel = new SeaLevel(this);
   }
 
 

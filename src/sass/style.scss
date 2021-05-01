@@ -18,3 +18,18 @@ body {
     touch-action: none;
     //cursor: none;
 }
+
+.pause {
+    position: absolute;
+    top: 50vh;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    text-transform: uppercase;
+    color: white;
+    visibility: hidden;
+
+    p {
+        font-size: 30px;
+    }
+}
