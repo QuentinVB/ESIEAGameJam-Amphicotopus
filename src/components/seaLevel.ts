@@ -15,7 +15,7 @@ export default class SeaLevel extends GameObject {
     sea.position = new Vector3(0, altitude, 250);
     sea.rotation = new Vector3(0, 0, Math.PI);
     const seaBox = MeshBuilder.CreateBox("seaBox", { width: 512, height: 4, depth: 512 }, this.Scene);
-    seaBox.position = new Vector3(0, altitude - 1, 250);
+    seaBox.position = new Vector3(0, altitude - 0.5, 250);
     seaBox.visibility = 0;
 
     const water = new StandardMaterial("water", this.Scene);

@@ -23,3 +23,7 @@ The npm has 4 entry point (executable via `npm run commandName` )
     https://www.babylonjs-playground.com/#1V3CAT#171
 
     https://programmersought.com/article/75147644090/
+
+    https://opengameart.org/content/water-caustics-effect-small
+
+    https://doc.babylonjs.com/divingDeeper/materials/using/parallaxMapping

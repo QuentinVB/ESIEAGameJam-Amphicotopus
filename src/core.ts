@@ -52,7 +52,6 @@ export default class Core {
     FISHSPEED: 40,//the smaller the faster
     //add other ?
     DEBUG: false
-
   }
 
   private readonly SCENARIO = [
@@ -167,11 +166,15 @@ export default class Core {
       if (this.levelName == "scene_start_menu") {
         this.level = new MenuLevel(this);
       }
-      else if (this.levelName) {
-        this.level = new FromFileLevel(this);
+      else if (this.levelName == "default") {
+        this.level = new DefaultLevel(this);
+      }
+      else if (this.levelName.startsWith("cutscene")) {
+
+        this.level = new CutsceneLevel(this, this.levelName.split("-")[1]);
       }
       else {
-        this.level = new DefaultLevel(this);
+        this.level = new FromFileLevel(this);
       }
     }
     else {

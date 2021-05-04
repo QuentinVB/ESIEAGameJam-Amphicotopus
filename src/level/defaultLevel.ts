@@ -1,4 +1,5 @@
-import { ArcRotateCamera, GroundBuilder, HemisphericLight, Scene, SphereBuilder, Vector3 } from "babylonjs";
+import { ArcRotateCamera, MeshBuilder, HemisphericLight, Scene, SphereBuilder, Vector3 } from "babylonjs";
+import { Ground } from "../components/index";
 import Level from "./level";
 
 export default class DefaultLevel extends Level {
@@ -29,17 +30,8 @@ export default class DefaultLevel extends Level {
     sphere.position.y = 1;
 
     // Our built-in 'ground' shape.
-    const ground = GroundBuilder.CreateGround(
-      "ground",
-      { width: 6, height: 6 },
-      scene
-    );
+    const ground = new Ground(this);// MeshBuilder.CreateGround('ground', { width: 10, height: 10, subdivisions: 1 }, this.scene)
 
     return scene;
   };
-  /*
-    public preTasks? = (): Promise<unknown>[] => {
-      return undefined;
-    };
-    */
 }

@@ -57,16 +57,16 @@ export default class MenuLevel extends Level {
     visuel.stretch = Image.STRETCH_UNIFORM;
     visuelContainer.addControl(visuel);
 
-    const title = new TextBlock("info", "truc");
+    const title = new TextBlock("info", "2021 - Pÿrenia et kiu");
     title.resizeToFit = true;
     title.fontFamily = "Arial";
     title.fontSize = "10px";
     title.color = "white";
-    title.resizeToFit = true;
-    title.top = "54px";
+    title.top = "0px";
     title.width = 0.8;
     title.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-    imageRect.addControl(title);
+    guiMenu.addControl(title);
+
 
 
 

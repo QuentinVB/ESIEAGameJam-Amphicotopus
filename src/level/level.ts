@@ -66,17 +66,31 @@ export default abstract class Level implements ICreateLevelClass {
     const meshes = this.scene.getMeshesByTags(tag);
     const spriteInfo: ISpriteInfo = this.spriteLibrary[tag];
     for (const mesh of meshes) {
-      const code = Math.random().toString(16);
-      const instanceOfSprite = new Sprite(tag + "-" + code, spriteInfo.manager);
+      const code = Math.random().toString(36).substring(7);
+      const instanceOfSprite = new Sprite(tag + "-sprite-" + code, spriteInfo.manager);
       instanceOfSprite.playAnimation(spriteInfo.animationStart, spriteInfo.animationEnd, true, spriteInfo.animationDelay);
       instanceOfSprite.size = spriteInfo.size;
       instanceOfSprite.position = mesh.position;
 
       this.spriteRefs[instanceOfSprite.name] = instanceOfSprite;
-      mesh.name = "item-" + code;
+      mesh.name = tag + "-hitbox-" + code;
       mesh.isVisible = false;
     }
     return meshes;
+  }
+  removeItemAndSprite(name: string): void {
+    const item = this.scene.getMeshByName(name);
+    const nameArray = name.split('-');
+    const spriteName = nameArray[0] + "-sprite-" + nameArray[2];
+    const sprite = this.spriteRefs[spriteName];
+
+    if (sprite) sprite.dispose();
+    if (item) item.dispose();
+    if (item && sprite) delete this.spriteRefs[spriteName];
+    //
+
+    //
+    //item.isVisible = false;
   }
   AddFishAnimationFor(tag: string): void {
     Object.keys(this.spriteRefs).forEach((key) => {
@@ -100,6 +114,7 @@ export default abstract class Level implements ICreateLevelClass {
       }
     })
   }
+
 
 
   private bindActions() {

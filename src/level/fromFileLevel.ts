@@ -1,6 +1,6 @@
 import { Texture, Color3, StandardMaterial, AbstractMesh, ArcRotateCamera, CannonJSPlugin, HemisphericLight, Scene, SceneLoader, Vector3, PhysicsImpostor, Mesh, Camera, MeshBuilder, ShadowGenerator, Sprite, FollowCamera, DirectionalLight, ExecuteCodeAction, ActionManager, Sound } from "babylonjs";
 import { AdvancedDynamicTexture, Control, Rectangle, Image } from "babylonjs-gui";
-import { Character, SeaLevel } from "../components/index";
+import { Character, Ground, SeaLevel } from "../components/index";
 import { ISpriteInfo, SpriteLibrary } from "../services/spriteLib";
 import Level from "./level";
 import * as States from '../states/index';
@@ -8,7 +8,7 @@ import { WaterMaterial } from "babylonjs-materials";
 
 export default class FromFileLevel extends Level {
 
-  public _grounds: Mesh[] = [];//TODO : should be ground object
+  public _grounds: Ground[] = [];
   public _seaLevel: SeaLevel;
 
   public createLevel = async (): Promise<Scene> => {
@@ -73,7 +73,8 @@ export default class FromFileLevel extends Level {
     this.ManageGoodItems("Medusa");
     this.ManageBadItems("Bag");
 
-    this.ManageObstacles("Obstacle");
+    this.ManageRock("Rock");
+    this.ManageWalls("Wall");
     this.ManageGrounds("Ground");
     this.CreateOceanRoof();
 
@@ -171,12 +172,9 @@ export default class FromFileLevel extends Level {
     this._character = new Character(this, mesh as Mesh);
   }
   ManageGrounds(tagQuery: string): void {
-    this._grounds = this.scene.getMeshesByTags(tagQuery);
-    //TODO : should create ground items
-    this._grounds.forEach(item => {
-      //item.receiveShadows = true;
-      //console.log(item.receiveShadows);
-      item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0 }, this.scene);
+    const allGround = this.scene.getMeshesByTags(tagQuery);
+    allGround.forEach(item => {
+      this._grounds.push(new Ground(this, item));
     });
   }
 
@@ -225,9 +223,9 @@ export default class FromFileLevel extends Level {
   }
 
 
-  ManageObstacles(tagQuery: string): void {
-    const obstacle = this.scene.getMeshesByTags(tagQuery);
-    obstacle.forEach(item => {
+  ManageRock(tagQuery: string): void {
+    const rock = this.scene.getMeshesByTags(tagQuery);
+    rock.forEach(item => {
       item.checkCollisions = true;
       item.physicsImpostor = new PhysicsImpostor(item, PhysicsImpostor.BoxImpostor, {
         mass: 0,
@@ -235,18 +233,22 @@ export default class FromFileLevel extends Level {
       });
     });
   }
-  removeItemAndSprite(name: string): void {
-    const item = this.scene.getMeshByName(name);
-    const spriteName = "sprite-" + name.split('-')[1];
-    const sprite = this.spriteRefs[spriteName];
-    if (sprite) sprite.dispose();
-    if (item) item.dispose();
-    if (item && sprite) delete this.spriteRefs[spriteName];
-    //
+  ManageWalls(tagQuery: string): void {
+    const walls = this.scene.getMeshesByTags(tagQuery);
+    walls.forEach(item => {
+      const mesh = MeshBuilder.CreateBox("wallCollider", { width: 11, height: 18, depth: 9 }, this.scene);
+      mesh.position = new Vector3(item.position.x, item.position.y + 2, item.position.z);
+      mesh.rotation = item.rotation;
+      mesh.checkCollisions = true;
+      mesh.visibility = 0;
 
-    //
-    //item.isVisible = false;
+      mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.BoxImpostor, {
+        mass: 0,
+        friction: 1.0
+      });
+    });
   }
+
   CreateOceanRoof(): void {
     this._seaLevel = new SeaLevel(this);
   }

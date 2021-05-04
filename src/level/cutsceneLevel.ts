@@ -1,5 +1,5 @@
 import { KeyboardEventTypes, Camera, Color3, FreeCamera, Mesh, MeshBuilder, PointerEventTypes, PostProcess, Scene, StandardMaterial, Vector3, VideoTexture } from "babylonjs";
-import { AdvancedDynamicTexture, Rectangle, Image, StackPanel, Control, Button } from "babylonjs-gui";
+import { AdvancedDynamicTexture, Rectangle, Image, StackPanel, Control, Button, TextBlock } from "babylonjs-gui";
 import { KEYS } from '../common';
 import Core from "../core";
 import Level from "./level";
@@ -76,12 +76,12 @@ export default class CutsceneLevel extends Level {
 
     //TODO : animage from slideshow !!!
     //const imgBD = new Image("bd_image", "./public/img/BD_Intro.png");
-    const cellCount = 5;
-    const imgBD = new Image("bd_image", "./public/img/Sprite-BD-1x5-min.png");
+    const cellCount = 6;
+    const imgBD = new Image("bd_image", "./public/img/Sprite-BD-1x6-min.png");
     imgBD.stretch = Image.STRETCH_UNIFORM;
     imgBD.cellId = 0;
     imgBD.cellHeight = 540;
-    imgBD.cellWidth = 4800 / cellCount;
+    imgBD.cellWidth = 5760 / cellCount;
     imgBD.sourceHeight = 540;
     imgBD.sourceWidth = 540;
     imageRect.addControl(imgBD);
@@ -170,10 +170,12 @@ export default class CutsceneLevel extends Level {
   private _victoryCutscene(): void {
     const size = 1;
     const planeOpts = {
-      height: 5.4762 * size,
-      width: 7.3967 * size,
-      sideOrientation: Mesh.DOUBLESIDE
+      height: 4.80 * size,
+      width: 3.52 * size,
+      sideOrientation: Mesh.FRONTSIDE
     };
+    /*  height: 5.4762 * size,
+          width: 7.3967 * size,*/
     const ANote0Video = MeshBuilder.CreatePlane("plane", planeOpts, this.scene);
     const vidPos = new Vector3(0, 0, 0.1);
     ANote0Video.position = vidPos;
@@ -195,6 +197,38 @@ export default class CutsceneLevel extends Level {
         console.log(ANote0VideoVidTex.video.paused ? "paused" : "playing");
       }
     }, PointerEventTypes.POINTERPICK);
+
+
+    const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    guiMenu.idealHeight = 720;
+
+    const bgContainer = new Rectangle("bgContainer");
+    bgContainer.width = 1;
+    bgContainer.height = 1;
+    bgContainer.thickness = 1;
+    bgContainer.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_CENTER;
+    bgContainer.horizontalAlignment = Rectangle.VERTICAL_ALIGNMENT_BOTTOM;
+    guiMenu.addControl(bgContainer);
+
+    const imageRect = new Rectangle("banddessinée_perdu");
+    imageRect.width = 0.8;
+    bgContainer.height = 1;
+    bgContainer.thickness = 0;
+    bgContainer.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+    guiMenu.addControl(imageRect);
+
+    const title = new TextBlock("info", "JustKeepSwimming\nTHANKS FOR PLAYING !\nESIEA-GameJam-2021\nPÿrenia et kiu");
+    title.fontFamily = "Arial";
+    title.fontSize = "20px";
+    title.color = "white";
+    title.top = "-20px";
+    title.resizeToFit = true;
+    title.width = 0.8;
+    bgContainer.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_CENTER;
+    title.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+    imageRect.addControl(title);
+
+
   }
   private _deathCutscene(): void {
     //--GUI--
