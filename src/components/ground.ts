@@ -45,7 +45,7 @@ export default class Ground extends GameObject {
       //const texture = new Texture("./public/img/sand.png", this.Level.scene);
 
       //const texture = new AnimatedTexture("./public/img/caustics_atlas.png", this.Level, { col: 4, row: 4 });
-      const texture = new MultiLayerAnimatedTexture("multiLayer", this.Level, { width: 256, height: 256 });
+      const texture = new MultiLayerAnimatedTexture("multiLayerSand", this.Level, { width: 256, height: 256 });
       texture.AddBackgroundTexture("./public/img/sand.png", { width: 256, height: 256 });
       texture.AddAnimationTexture("./public/img/caustics_atlas.png", { width: 1024, height: 1024, col: 4, row: 4 });
       //texture.AddAnimationTexture("./public/img/tileNumber.png", { width: 256, height: 256, col: 2, row: 2 });

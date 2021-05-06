@@ -29,8 +29,12 @@ export default class Character extends GameObject {
   private readonly SPRITEOFFSET_Y = 0.5;
   private readonly BASESPEED = 0.3;
   private readonly MOVEMENTSPEED = 0.5;
-  private readonly MAXINCLINAISONANGLE = Math.PI / 8;
-  private readonly TURNSPEED = 0.05;
+
+  private readonly MAXINCLINAISONANGLEAMPLITUDE = Math.PI / 4;
+  private readonly TURNFORCE = 0.08;
+  private readonly COOLDOWNRESET = 10;
+  private readonly EPSILON = 0.01;
+  private turnCooldown = this.COOLDOWNRESET;
   private turtleAngleValue = 0;
 
   constructor(level: Level, mesh?: Mesh) {
@@ -72,14 +76,16 @@ export default class Character extends GameObject {
             break;
           case KEYS.LEFT://Q - LEFT
             this.turtlePhysic.applyImpulse(Vector3.Left().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition());
-            this.turtleAngleValue += this.TURNSPEED;
+            this.turnCooldown = this.COOLDOWNRESET;
+            this.turtleAngleValue += this.TURNFORCE;
             break;
           case KEYS.DOWN://S - DOWN
             this.turtlePhysic.applyImpulse(Vector3.Down().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
             break;
           case KEYS.RIGHT://D - RIGHT
             this.turtlePhysic.applyImpulse(Vector3.Right().scale(this.MOVEMENTSPEED), this.MainMesh.getAbsolutePosition())
-            this.turtleAngleValue -= this.TURNSPEED;
+            this.turnCooldown = this.COOLDOWNRESET;
+            this.turtleAngleValue -= this.TURNFORCE;
             break;
           //spaceBar
           case 32:
@@ -125,20 +131,27 @@ export default class Character extends GameObject {
 
   }
   turtleAngleUpdater(): void {
-    if (this.MAXINCLINAISONANGLE < this.turtleAngleValue) this.turtleAngleValue = this.MAXINCLINAISONANGLE;
-    if (this.turtleAngleValue < -this.MAXINCLINAISONANGLE) this.turtleAngleValue = -this.MAXINCLINAISONANGLE;
+    //this.Level.env.engine.getDeltaTime();
+    //if an turn is in progress substract cooldown
 
-    if (!(-0.05 < this.turtleAngleValue && this.turtleAngleValue < 0.05)) {
-      if (this.turtleAngleValue < 0) this.turtleAngleValue += this.TURNSPEED * 0.5;
-      if (this.turtleAngleValue > 0) this.turtleAngleValue -= this.TURNSPEED * 0.5;
+    if (Math.abs(this.turtleAngleValue) != 0) {
+      this.turnCooldown--;
+      //apply damping force if cooldown expired
+      if (this.turnCooldown < 0) {
+        this.turtleAngleValue += (-Math.sign(this.turtleAngleValue) * this.TURNFORCE * 0.5);
+      }
     }
-    else {
+    //reset turn if below epsilon
+    if (Math.abs(this.turtleAngleValue) < this.EPSILON) {
       this.turtleAngleValue = 0;
       const lv = this.turtlePhysic.getLinearVelocity();
       this.turtlePhysic.setLinearVelocity(new Vector3(0, lv.y, lv.z));
+      this.turnCooldown = this.COOLDOWNRESET;
     }
-    //console.log(this.turtleAngleValue);
-    this.turtle.angle = this.turtleAngleValue;
+    //clamp turn factor and compute in the amplitude
+    this.turtleAngleValue = Math.max(Math.min(this.turtleAngleValue, 1), -1);
+    this.turtle.angle = (this.turtleAngleValue) * (this.MAXINCLINAISONANGLEAMPLITUDE) / 2;
+    console.log(this.turtleAngleValue);
   }
   LoadTurtleStates(): void {
     TurtleStates[TurtleState.Idle] = {

@@ -207,6 +207,7 @@ export default class Core {
     return this._scenarioStep;
   }
   //TODO callback could request time ?
+  //TODO change to beforeUpdateObservable !
   public registerFunctionBeforeUpdate(callback: () => void): void {
     this.registredFunction.push(callback);
   }

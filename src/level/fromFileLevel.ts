@@ -95,6 +95,7 @@ export default class FromFileLevel extends Level {
 
     //STATE
     const trigger = this.scene.getMeshByName("Trigger");
+    trigger.visibility = 0;
     this.gameState = new States.Game(this.env, trigger as Mesh);
 
 

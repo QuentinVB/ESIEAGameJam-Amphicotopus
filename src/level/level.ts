@@ -39,6 +39,7 @@ export default abstract class Level implements ICreateLevelClass {
       "baseColor.a = 1.0;" +
       "gl_FragColor = baseColor;" +
       "}");
+
   }
   public abstract createLevel: () => Promise<Scene>;
 
